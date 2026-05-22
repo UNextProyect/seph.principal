@@ -12,7 +12,9 @@
 
   <ItemGroup>
     <Folder Include="Features\Administration\" />
-    <Folder Include="Features\Auth\Commands\" />
+    <Folder Include="Features\Auth\Commands\Login\" />
+    <Folder Include="Features\Auth\Commands\RevokeSession\" />
+    <Folder Include="Features\Auth\Commands\RefreshToken\" />
     <Folder Include="Features\Users\" />
   </ItemGroup>
 
