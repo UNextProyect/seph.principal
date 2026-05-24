@@ -14,6 +14,7 @@ namespace Seph.Principal.Infraestructure.Authentication
     {
         private readonly JwtOptions jwtOptions = options.Value;
 
+        /*Creamos el token de acceso   */
         public string CreateAccessToken(AuthenticatedUserDto user)
         {
             var claims = new List<Claim>
@@ -40,12 +41,18 @@ namespace Seph.Principal.Infraestructure.Authentication
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
+        /*Creamos el token de refrescado con la nueva función CreateRefreshToken, que 
+         * genera un token aleatorio de 64 bytes y lo codifica en Base64 para
+         * su almacenamiento y uso posterior.
+         */
         public string CreateRefreshToken()
         {
             var bytes = RandomNumberGenerator.GetBytes(64);
             return Convert.ToBase64String(bytes);
         }
 
+        /* cre<mos una función HashRefreshToken que toma un token 
+         * de refresco como entrada, lo convierte a bytes utilizando UTF-8,*/
         public string HashRefreshToken(string refreshToken)
         {
             var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken));

@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Authorization\" />
     <Folder Include="DependencyInjection\" />
     <Folder Include="Identity\" />
     <Folder Include="Persistence\" />
