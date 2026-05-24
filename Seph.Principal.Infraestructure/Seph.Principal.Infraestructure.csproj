@@ -21,4 +21,8 @@
     <ProjectReference Include="..\Seph.Principal.Application\Seph.Principal.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Persistence\Repositories\" />
+  </ItemGroup>
+
 </Project>
