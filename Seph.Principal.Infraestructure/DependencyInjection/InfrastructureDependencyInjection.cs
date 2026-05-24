@@ -15,6 +15,10 @@ using System.Text;
 
 namespace Seph.Principal.Infraestructure.DependencyInjection
 {
+    /*esta clase es la encargada de registrar todos los servicios relacionados con la infraestructura, 
+     * como el contexto de la base de datos, los servicios de identidad, los servicios de autenticación y autorización,
+     * etc. Esto permite mantener una separación clara entre la capa de 
+     * infraestructura y las demás capas de la aplicación, facilitando el mantenimiento y la escalabilidad del código.*/
     public static class InfrastructureDependencyInjection
     {
         public static IServiceCollection AddInfraestructure(this IServiceCollection services, IConfiguration configuration)
@@ -70,7 +74,8 @@ namespace Seph.Principal.Infraestructure.DependencyInjection
             services.AddScoped<IIdentityService, IdentityService>();
             services.AddSingleton<IJwtTokenService, JwtTokenService>();
             services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
-
+            
+            return services;
         }
     }
 }
