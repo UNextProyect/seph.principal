@@ -11,6 +11,7 @@ using Seph.Principal.Infraestructure.Authentication;
 using Seph.Principal.Infraestructure.Authorization;
 using Seph.Principal.Infraestructure.Identity;
 using Seph.Principal.Infraestructure.Persistence;
+using Seph.Principal.Infraestructure.Persistence.Repositories;
 using System.Text;
 
 namespace Seph.Principal.Infraestructure.DependencyInjection
@@ -21,6 +22,9 @@ namespace Seph.Principal.Infraestructure.DependencyInjection
      * infraestructura y las demás capas de la aplicación, facilitando el mantenimiento y la escalabilidad del código.*/
     public static class InfrastructureDependencyInjection
     {
+
+        /*El método AddInfraestructure es una extensión de IServiceCollection que se encarga de registrar todos
+         * los servicios relacionados con la infraestructura en el contenedor de dependencias de ASP.NET Core.*/
         public static IServiceCollection AddInfraestructure(this IServiceCollection services, IConfiguration configuration)
         {
             services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
@@ -29,7 +33,9 @@ namespace Seph.Principal.Infraestructure.DependencyInjection
 
             services.AddDbContext<ApplicationDbContext>(options => options.
                 UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
-
+            /*El método AddIdentity se utiliza para configurar los servicios de identidad en la aplicación. 
+             * Aquí se establecen las políticas de contraseña, bloqueo de cuenta y requisitos de usuario, 
+             * así como la configuración para usar Entity Framework Core como el almacén de datos para la identidad.*/
             services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
             {
 
@@ -46,7 +52,8 @@ namespace Seph.Principal.Infraestructure.DependencyInjection
             })
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
-
+            /*El método AddAuthentication se utiliza para configurar los servicios de autenticación en la aplicación.
+             */ 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options => {
 
@@ -65,6 +72,8 @@ namespace Seph.Principal.Infraestructure.DependencyInjection
                     };
                 });
 
+            /*El método AddAuthorizationBuilder se utiliza para configurar los servicios de autorización en la aplicación.
+             */
             services.AddAuthorizationBuilder()
                 .AddPolicy("Security.Admin", policy => policy.Requirements.Add(new PermissionRequirement("security.admin")))
                 .AddPolicy("Users.Read", policy => policy.Requirements.Add(new PermissionRequirement("users.read")));
