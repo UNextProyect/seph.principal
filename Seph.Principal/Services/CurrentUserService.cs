@@ -4,6 +4,7 @@ using System.Security.Claims;
 
 namespace Seph.Principal.Services
 {
+    /*public interface IJwtService*/
     public sealed class CurrentUserService(IHttpContextAccessor httpContextAccessor) : ICurrentUserService
     {
         public Guid? UserId
