@@ -12,7 +12,8 @@ namespace Seph.Principal.Application.Features.Auth.Commands.Login
         IUnitOfWork unitOfWork) : IRequestHandler<LoginCommand, ResponseWrapper<AuthResponseDto>>
     {
 
-        public async Task<ResponseWrapper<AuthResponseDto>> Handle(LoginCommand request, CancellationToken cancellationToken) {
+        public async Task<ResponseWrapper<AuthResponseDto>> Handle(LoginCommand request, CancellationToken cancellationToken) 
+        {
             /*1. Validate the user's credentials using the IIdentityService.*/
             var user = await identityService.ValidateCredentialAsync(request.Email, request.Password,cancellationToken);
             if (user is null)
