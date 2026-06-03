@@ -1,7 +1,7 @@
 ﻿using Seph.Principal.Application.Common.Models;
-using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Text.Json;
+using FluentValidation;
 
 namespace Seph.Principal.Middleware
 {
