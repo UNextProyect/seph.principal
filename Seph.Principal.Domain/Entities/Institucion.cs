@@ -13,5 +13,26 @@ namespace Seph.Principal.Domain.Entities
         public string StrValor { get; set; } = string.Empty;
 
         public string StrDescripcion { get; set; } = string.Empty;
+
+        #region Constructor
+        public Institucion()
+        {
+                
+        }
+
+        public Institucion(int id, string strValor, string strDescripcion)
+        {
+            Id = id;
+            StrValor = strValor;
+            StrDescripcion = strDescripcion;
+        }
+
+        public Institucion(string strValor)
+        {
+            StrValor = strValor;
+        }
+
+
+        #endregion
     }
 }

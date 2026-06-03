@@ -10,7 +10,7 @@ namespace Seph.Principal.Infraestructure.Persistence
     : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>(options), IApplicationDbContext, IUnitOfWork
     {
         public DbSet<RefreshTokenSession> RefreshTokenSessions => Set<RefreshTokenSession>();
-
+        public DbSet<Institucion> Instituciones => Set<Institucion>();
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
