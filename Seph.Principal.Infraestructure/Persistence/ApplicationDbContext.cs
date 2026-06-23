@@ -12,6 +12,7 @@ namespace Seph.Principal.Infraestructure.Persistence
         public DbSet<RefreshTokenSession> RefreshTokenSessions => Set<RefreshTokenSession>();
         public DbSet<Institucion> Instituciones => Set<Institucion>();
         public DbSet<Empleado> Empleados => Set<Empleado>();
+        public DbSet<CatSexo> CatSexo => Set<CatSexo>();
         public DbSet<EmailVerificationCode> EmailVerificationCodes => Set<EmailVerificationCode>();
 
         protected override void OnModelCreating(ModelBuilder builder)

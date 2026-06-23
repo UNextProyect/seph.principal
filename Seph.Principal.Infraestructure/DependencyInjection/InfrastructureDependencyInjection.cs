@@ -101,6 +101,7 @@ namespace Seph.Principal.Infraestructure.DependencyInjection
             services.AddScoped<IIdentityService, IdentityService>();
             services.AddScoped<IInstitucionRepository, InstitucionRepository>();
             services.AddScoped<IEmpleadosRepository, EmpleadosRepository>();
+            services.AddScoped<ICatSexoRepository, CatSexoRepository>();
 
             services.Configure<GoogleOptions>(configuration.GetSection(GoogleOptions.SectionName));
             services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
