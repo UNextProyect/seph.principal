@@ -84,7 +84,7 @@ namespace Seph.Principal.Infraestructure.Identity
             var claims = await userManager.GetClaimsAsync(user);
             var permissions = claims.Where(claim => claim.Type == "permission").Select(claim => claim.Value).Distinct().ToArray();
 
-            return new AuthenticatedUserDto(user.Id, user.Email ?? string.Empty, user.FullName, roles.ToList(), permissions, user.EmailConfirmed);
+            return new AuthenticatedUserDto(user.Id, user.Email ?? string.Empty, user.FullName, roles.ToList(), permissions, user.EmailConfirmed, user.IdInstitucion);
         }
 
         /// <summary>
@@ -141,6 +141,29 @@ namespace Seph.Principal.Infraestructure.Identity
             if (!result.Succeeded) return null;
 
             await userManager.AddToRoleAsync(user, "User");
+
+            return user.Id;
+        }
+
+        public async Task<Guid?> CreateUserWithRoleAsync(string fullName, string email, string password, string role, long? idInstitucion, CancellationToken cancellationToken)
+        {
+            var existing = await userManager.FindByEmailAsync(email);
+            if (existing is not null) return null;
+
+            var user = new ApplicationUser
+            {
+                UserName = email,
+                Email = email,
+                FullName = fullName,
+                IsActive = true,
+                EmailConfirmed = true,        // creado por un administrador: se da por verificado
+                IdInstitucion = idInstitucion
+            };
+
+            var result = await userManager.CreateAsync(user, password);
+            if (!result.Succeeded) return null;
+
+            await userManager.AddToRoleAsync(user, role);
 
             return user.Id;
         }

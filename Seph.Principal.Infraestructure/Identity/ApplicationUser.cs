@@ -9,5 +9,11 @@ namespace Seph.Principal.Infraestructure.Identity
         public bool IsActive { get; set; } = true;
 
         public DateTimeOffset? LastLoginAtUtc { get; set; }
+
+        /// <summary>
+        /// Institución a la que pertenecen los usuarios.
+        /// NULL para el SuperAdmin, que no está atado a una institución.
+        /// </summary>
+        public long? IdInstitucion { get; set; }
     }
 }

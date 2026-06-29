@@ -13,6 +13,13 @@ namespace Seph.Principal.Application.Common.Interfaces
         Task<AuthenticatedUserDto> GetUserByIdAsync(Guid userId, CancellationToken cancellationToken);
         Task<IReadOnlyCollection<string>> GetUserPermissionsAsync(Guid userId, CancellationToken cancellationToken);
         Task<Guid?> RegisterAsync(string fullName, string email, string password, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Crea un usuario con un rol específico y una institución asignada.
+        /// Usado por el SuperAdmin para crear Admins y por los Admins para crear usuarios de su institución.
+        /// Devuelve el Id del usuario creado, o null si el correo ya existe o falla la creación.
+        /// </summary>
+        Task<Guid?> CreateUserWithRoleAsync(string fullName, string email, string password, string role, long? idInstitucion, CancellationToken cancellationToken);
         Task MarkLastLoginAsync(Guid userId, CancellationToken cancellationToken);
         Task<AuthenticatedUserDto> FindOrCreateGoogleUserAsync(string email, string fullName, string googleId, CancellationToken cancellationToken);
         /// <summary>

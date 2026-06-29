@@ -21,10 +21,10 @@ namespace Seph.Principal.Infraestructure.Persistence.Repositories
         {
             return await _context.Instituciones
                 .AsNoTracking()
-                .OrderBy(x => x.StrValor)
+                .OrderBy(x => x.StrNombre)
                 .ToListAsync(cancellationToken);
         }
-        public async Task<Institucion?> GetByIdAsync(int id,CancellationToken cancellationToken)
+        public async Task<Institucion?> GetByIdAsync(long id,CancellationToken cancellationToken)
         {
             return await _context.Instituciones
                 .FirstOrDefaultAsync(

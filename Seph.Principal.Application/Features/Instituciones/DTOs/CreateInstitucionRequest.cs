@@ -1,9 +1,9 @@
-using MediatR;
-using Seph.Principal.Application.Common.Models;
-
-namespace Seph.Principal.Application.Features.Instituciones.Commands.CreateInstitucion
+namespace Seph.Principal.Application.Features.Instituciones.DTOs
 {
-    public sealed record CreateInstitucionCommand(
+    /// <summary>
+    /// Cuerpo de la petición para crear una institución. Solo StrNombre e IdMunicipio son obligatorios.
+    /// </summary>
+    public sealed record CreateInstitucionRequest(
         string StrNombre,
         string? StrSiglas,
         string? StrCct,
@@ -13,6 +13,5 @@ namespace Seph.Principal.Application.Features.Instituciones.Commands.CreateInsti
         string? StrSitioWeb,
         string? StrCorreoInstitucional,
         string? StrTelefonoInstitucional,
-        long IdMunicipio)
-        : IRequest<ResponseWrapper<InstitucionDto>>;
+        long IdMunicipio);
 }

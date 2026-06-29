@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Seph.Principal.Application.Features.Auth.DTOs
 {
     public sealed record CatSexoDto(
-    int Id,
+    long Id,
     string StrValor,
     string StrDescripcion
 );

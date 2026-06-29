@@ -20,5 +20,14 @@ namespace Seph.Principal.Services
         public string? Email => httpContextAccessor.HttpContext?.User.FindFirstValue(JwtRegisteredClaimNames.Email);
         public string? IpAddress => httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
         public string? DeviceId => httpContextAccessor.HttpContext?.Request.Headers["X-Device-Id"].FirstOrDefault();
+
+        public long? IdInstitucion
+        {
+            get
+            {
+                var value = httpContextAccessor.HttpContext?.User.FindFirstValue("idInstitucion");
+                return long.TryParse(value, out var id) ? id : null;
+            }
+        }
     }
 }

@@ -13,8 +13,15 @@ namespace Seph.Principal.Application.Features.Instituciones.Queries.GetInstituci
 
             IReadOnlyList<InstitucionDto> response = instituciones.Select(x => new InstitucionDto(
                         x.Id,
-                        x.StrValor,
-                        x.StrDescripcion))
+                        x.StrNombre,
+                        x.StrSiglas,
+                        x.StrCct,
+                        x.StrDireccion,
+                        x.StrSitioWeb,
+                        x.StrCorreoInstitucional,
+                        x.StrTelefonoInstitucional,
+                        x.IdMunicipio,
+                        x.BitActivo))
                     .ToList();
 
             return ResponseFactory.Success(

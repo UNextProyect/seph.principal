@@ -8,17 +8,18 @@ using Seph.Principal.Domain.Repositories;
 namespace Seph.Principal.Application.Features.Empleados.Commands.CreateEmpleado
 {
     public sealed class CreateEmpleadoCommandHandler(IEmpleadosRepository empleadosRepository,
-     IUnitOfWork unitOfWork): IRequestHandler<CreateEmpleadoCommand, ResponseWrapper<EmpleadosDto>>
+     IUnitOfWork unitOfWork): IRequestHandler<CreateEmpleadoCommand, ResponseWrapper<EmpleadoResponse>>
     {
-        public async Task<ResponseWrapper<EmpleadosDto>> Handle(CreateEmpleadoCommand request, CancellationToken cancellationToken)
+        public async Task<ResponseWrapper<EmpleadoResponse>> Handle(CreateEmpleadoCommand request, CancellationToken cancellationToken)
         {
-            var empleado = new Seph.Principal.Domain.Entities.Empleado
+            var empleado = new Empleado
             {
                 StrNombre = request.StrNombre,
                 StrApellidoPat = request.StrApellidoPat,
                 StrApellidoMat = request.StrApellidoMat,
                 StrCurp = request.StrCurp,
                 IdSexo = request.IdSexo,
+                IdInstitucion = request.IdInstitucion,
                 DateTimeFechaRegistro = request.DateTimeFechaRegistro,
                 IdUsuarioRegistro = request.IdUsuarioRegistro,
                 BitActivo = request.BitActivo,
@@ -31,11 +32,14 @@ namespace Seph.Principal.Application.Features.Empleados.Commands.CreateEmpleado
             
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
-            var dto = new EmpleadosDto(empleado.StrNombre, empleado.StrApellidoPat, empleado.StrApellidoMat, empleado.StrCurp, empleado.IdSexo, empleado.DateTimeFechaRegistro, empleado.IdUsuarioRegistro, empleado.BitActivo, empleado.DateTimeFechaBaja);
-
             return ResponseFactory.Success(
-                dto,
-                "Empleado registrado correctamente");
+             new EmpleadoResponse(
+                 empleado.Id,
+                 empleado.StrNombre,
+                 empleado.StrApellidoPat,
+                 empleado.StrApellidoMat,
+                 empleado.StrCurp),
+             "Empleado registrado correctamente");
         }
     }
 }
