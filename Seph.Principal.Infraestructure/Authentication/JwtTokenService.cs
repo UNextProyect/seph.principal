@@ -28,6 +28,9 @@ namespace Seph.Principal.Infraestructure.Authentication
             claims.AddRange(user.Roles.Select(role => new Claim(ClaimTypes.Role, role)));
             claims.AddRange(user.Permissions.Select(permission => new Claim("permission", permission)));
 
+            if (user.IdInstitucion.HasValue)
+                claims.Add(new Claim("idInstitucion", user.IdInstitucion.Value.ToString()));
+
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SigningKey));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

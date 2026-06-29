@@ -8,7 +8,8 @@
     public sealed record AuthenticatedUserDto(Guid Id, string Email, string FullName,
          IReadOnlyCollection<string> Roles,
          IReadOnlyCollection<string> Permissions,
-         bool EmailConfirmed);
+         bool EmailConfirmed,
+         long? IdInstitucion);
 
 
 }

@@ -6,7 +6,7 @@ namespace Seph.Principal.Domain.Repositories
     {
         Task<IReadOnlyList<Institucion>> GetAllAsync(CancellationToken cancellationToken);
 
-        Task<Institucion?> GetByIdAsync(int id,CancellationToken cancellationToken);
+        Task<Institucion?> GetByIdAsync(long id,CancellationToken cancellationToken);
 
         Task AddAsync(Institucion institucion,CancellationToken cancellationToken);
 

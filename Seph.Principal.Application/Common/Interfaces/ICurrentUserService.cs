@@ -6,5 +6,6 @@
         string? Email { get; }
         string? IpAddress { get; }
         string? DeviceId { get; }
+        long? IdInstitucion { get; }
     }
 }

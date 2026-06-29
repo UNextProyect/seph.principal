@@ -14,6 +14,7 @@ namespace Seph.Principal.Domain.Entities
         public string? StrApellidoMat {  get; set; }
         public string? StrCurp { get; set; }
         public long IdSexo { get; set; }
+        public long IdInstitucion { get; set; }
         public DateTime DateTimeFechaRegistro { get; set; }
         public Guid IdUsuarioRegistro { get; set; }
         public bool BitActivo { get; set; }
@@ -26,7 +27,7 @@ namespace Seph.Principal.Domain.Entities
 
         }
 
-        public Empleado(long id, string? strNombre, string? strApellidoPat, string? strApellidoMat, string? strCurp, int idSexo, DateTime dateTimeFechaRegistro, Guid idUsuarioRegistro, bool bitActivo, DateTime dateTimeFechaBaja)
+        public Empleado(long id, string? strNombre, string? strApellidoPat, string? strApellidoMat, string? strCurp, int idSexo, int idInstitucion, DateTime dateTimeFechaRegistro, Guid idUsuarioRegistro, bool bitActivo, DateTime dateTimeFechaBaja)
         {
             Id = id;
             StrNombre = strNombre;
@@ -34,6 +35,7 @@ namespace Seph.Principal.Domain.Entities
             StrApellidoMat = strApellidoMat;
             StrCurp = strCurp;
             IdSexo = idSexo;
+            IdInstitucion = idInstitucion;
             DateTimeFechaRegistro = dateTimeFechaRegistro;
             IdUsuarioRegistro = idUsuarioRegistro;
             BitActivo = bitActivo;

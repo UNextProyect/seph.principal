@@ -8,7 +8,7 @@ namespace Seph.Principal.Domain.Entities
 {
     public class CatSexo
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
 
         public string StrValor { get; set; } = string.Empty;
 
@@ -20,7 +20,7 @@ namespace Seph.Principal.Domain.Entities
 
         }
 
-        public CatSexo(int id, string strValor, string strDescripcion)
+        public CatSexo(long id, string strValor, string strDescripcion)
         {
             Id = id;
             StrValor = strValor;

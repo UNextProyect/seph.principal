@@ -11,7 +11,7 @@ namespace Seph.Principal.Controllers
         #region Create
         [AllowAnonymous]
         [HttpPost("create-empleado")]
-        public async Task<IActionResult> Create([FromBody] EmpleadosDto request, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create([FromBody] CreateEmpleadoRequest request, CancellationToken cancellationToken)
         {
             var response = await sender.Send(new CreateEmpleadoCommand(
                 request.StrNombre,
@@ -19,6 +19,7 @@ namespace Seph.Principal.Controllers
                 request.StrApellidoMat,
                 request.StrCurp,
                 request.IdSexo,
+                request.IdInstitucion,
                 request.DateTimeFechaRegistro,
                 request.IdUsuarioRegistro,
                 request.BitActivo,
