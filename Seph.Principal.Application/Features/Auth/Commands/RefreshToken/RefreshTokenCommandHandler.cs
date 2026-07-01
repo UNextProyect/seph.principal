@@ -53,7 +53,7 @@ namespace Seph.Principal.Application.Features.Auth.Commands.RefreshToken
              jwtTokenService.CreateAccessToken(user),
              newRefreshToken,
              DateTimeOffset.UtcNow.AddMinutes(15),
-             new UserSessionDto(user.Id, user.Email, user.FullName, user.Roles, user.Permissions));
+             new UserSessionDto(user.Id, user.Email, user.FullName, user.IdInstitucion, user.Roles, user.Permissions));
             /* 10. Mantenerse actualizado con las últimas tendencias y vulnerabilidades en seguridad de autenticación y autorización,*/
             return ResponseFactory.Success(response);
         }

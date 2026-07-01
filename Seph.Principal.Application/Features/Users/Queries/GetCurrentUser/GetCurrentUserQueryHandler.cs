@@ -21,12 +21,13 @@ namespace Seph.Principal.Application.Features.Users.Queries.GetCurrentUser
              * y se devuelve una respuesta exitosa con ese objeto como datos.*/
             return ResponseFactory.Success(new UserSessionDto(
 
-                user.Id,
+                 user.Id,
                 user.Email,
                 user.FullName,
+                user.IdInstitucion,
                 user.Roles,
                 user.Permissions), "Usuario actual obtenido correctamente");
-            
+
         }
     }
 }

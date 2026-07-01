@@ -13,6 +13,10 @@ namespace Seph.Principal.Infraestructure.Persistence
         public DbSet<Institucion> Instituciones => Set<Institucion>();
         public DbSet<Empleado> Empleados => Set<Empleado>();
         public DbSet<CatSexo> CatSexo => Set<CatSexo>();
+        public DbSet<CatTipoPersonal> CatTipoPersonal => Set<CatTipoPersonal>();
+        public DbSet<CatTipoContrato> CatTipoContratos => Set<CatTipoContrato>();
+        public DbSet<CatArea> CatAreas => Set<CatArea>();
+        public DbSet<HistorialContrato> HistorialContratos => Set<HistorialContrato>();
         public DbSet<EmailVerificationCode> EmailVerificationCodes => Set<EmailVerificationCode>();
 
         protected override void OnModelCreating(ModelBuilder builder)

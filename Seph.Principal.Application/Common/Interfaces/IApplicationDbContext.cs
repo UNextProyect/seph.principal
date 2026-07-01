@@ -7,6 +7,7 @@ namespace Seph.Principal.Application.Common.Interfaces
     public interface IApplicationDbContext
     {
         DbSet<RefreshTokenSession> RefreshTokenSessions { get; }
+        DbSet<HistorialContrato> HistorialContratos { get; }
         Task<int> SaveChangesAsync(CancellationToken cancellationToken);
     }
 
