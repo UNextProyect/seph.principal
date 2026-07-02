@@ -102,7 +102,10 @@ namespace Seph.Principal.Infraestructure.DependencyInjection
             services.AddScoped<IInstitucionRepository, InstitucionRepository>();
             services.AddScoped<IEmpleadosRepository, EmpleadosRepository>();
             services.AddScoped<ICatSexoRepository, CatSexoRepository>();
-
+            services.AddScoped<ICatTipoPersonalRepository, CatTipoRepository>();
+            services.AddScoped<ICatTipoContratoRepository, CatTipoContratoRepository>();
+            services.AddScoped<ICatAreaRepository, CatAreaRepository>();
+            services.AddScoped<IHistorialContratoRepository, HistorialContratoRepository>();
             services.Configure<GoogleOptions>(configuration.GetSection(GoogleOptions.SectionName));
             services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
             services.AddScoped<IEmailService, SmtpEmailService>();

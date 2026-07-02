@@ -49,8 +49,7 @@ namespace Seph.Principal.Application.Features.Auth.Commands.Login
             /*creamos la respuesta  con los tokens y la información del usuario */
             var response = new AuthResponseDto(
                 accessToken, refreshToken, DateTimeOffset.UtcNow.AddMinutes(15),
-                new UserSessionDto(user.Id, user.Email, user.FullName, user.Roles, user.Permissions)
-                );
+            new UserSessionDto(user.Id, user.Email, user.FullName, user.IdInstitucion, user.Roles, user.Permissions));
             /*regresamos la respuesta  que es una entidad del tipo responseWrapper*/
             return ResponseFactory.Success(response, "Autenticación exitosa");
         }

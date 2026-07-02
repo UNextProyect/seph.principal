@@ -46,11 +46,23 @@ namespace Seph.Principal.Application.Features.Auth.Commands.GoogleLogin
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
             var accessToken = jwtTokenService.CreateAccessToken(user);
+
             var response = new AuthResponseDto(
-                accessToken, refreshToken, DateTimeOffset.UtcNow.AddMinutes(15),
-                new UserSessionDto(user.Id, user.Email, user.FullName, user.Roles, user.Permissions));
+                accessToken,
+                refreshToken,
+                DateTimeOffset.UtcNow.AddMinutes(15),
+                new UserSessionDto(
+                    user.Id,
+                    user.Email,
+                    user.FullName,
+                    user.IdInstitucion,
+                    user.Roles,
+                    user.Permissions
+                )
+            );
 
             return ResponseFactory.Success(response, "Autenticación con Google exitosa");
         }
     }
+
 }
