@@ -95,7 +95,7 @@ namespace Seph.Principal.Application.Features.ReporteVinculacion.Commands
                 cancellationToken);
 
             await bitacoraService.RegistrarAsync(
-                "Vinculación",
+                "Vinculacion",
                 reporte.Id.ToString(),
                 "Editar",
                 currentUserService.UserId?.ToString() ?? "desconocido",
