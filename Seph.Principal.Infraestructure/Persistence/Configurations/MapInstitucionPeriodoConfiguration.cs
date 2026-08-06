@@ -44,6 +44,16 @@ namespace Seph.Principal.Infraestructure.Persistence.Configurations
 
             builder.HasIndex(x => new { x.IdInstitucion, x.IdPeriodo })
                 .IsUnique();
+
+            builder.HasOne(x => x.Institucion)
+                .WithMany()
+                .HasForeignKey(x => x.IdInstitucion)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(x => x.Periodo)
+                .WithMany()
+                .HasForeignKey(x => x.IdPeriodo)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 
