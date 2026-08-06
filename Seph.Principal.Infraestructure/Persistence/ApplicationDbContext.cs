@@ -42,6 +42,10 @@ namespace Seph.Principal.Infraestructure.Persistence
         public DbSet<ReporteVinculacion> ReporteVinculaciones => Set<ReporteVinculacion>();
         public DbSet<SectorVinculadoVinculacion> SectorVinculadoVinculaciones => Set<SectorVinculadoVinculacion>();
         public DbSet<EmailVerificationCode> EmailVerificationCodes => Set<EmailVerificationCode>();
+        public DbSet<ReporteFinanza> ReporteFinanzas => Set<ReporteFinanza>();
+        public DbSet<ProyectoFinanciado> ProyectoFinanciados => Set<ProyectoFinanciado>();
+
+
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
