@@ -7,10 +7,10 @@ using FluentValidation;
 
 namespace Seph.Principal.Application.Features.MapInstitucionPeriodo.Commands.CreateMapInstitucionPeriodo
 {
-    public sealed class MapInstitucionPeriodoCommandValidator
+    public sealed class CreateMapInstitucionPeriodoCommandValidator
          : AbstractValidator<CreateMapInstitucionPeriodoCommand>
     {
-        public MapInstitucionPeriodoCommandValidator()
+        public CreateMapInstitucionPeriodoCommandValidator()
         {
             RuleFor(x => x.IdInstitucion)
                 .NotEmpty();

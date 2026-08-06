@@ -24,31 +24,45 @@ namespace Seph.Principal.Infraestructure.Persistence.Repositories
 
         #region Métodos de la clase
 
-        public async Task<IReadOnlyList<MapInstitucionPeriodo>> GetAllAsync(CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<MapInstitucionPeriodo>> GetAllAsync(
+      CancellationToken cancellationToken)
         {
             return await _context.MapInstitucionPeriodos
                 .AsNoTracking()
-                .OrderBy(x => x.Id)
+                .Include(x => x.Institucion)
+                .Include(x => x.Periodo)
+                    .ThenInclude(x => x.TipoPeriodo)
+                .OrderByDescending(x => x.DateTimeFechaRegistro)
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<MapInstitucionPeriodo?> GetByIdAsync(long id, CancellationToken cancellationToken)
+        public async Task<MapInstitucionPeriodo?> GetByIdAsync(
+        long id,
+        CancellationToken cancellationToken)
         {
             return await _context.MapInstitucionPeriodos
+                .AsNoTracking()
+                .Include(x => x.Institucion)
+                .Include(x => x.Periodo)
+                    .ThenInclude(x => x.TipoPeriodo)
                 .FirstOrDefaultAsync(
                     x => x.Id == id,
                     cancellationToken);
         }
 
         public async Task<MapInstitucionPeriodo?> GetByInstitucionPeriodoAsync(
-            long idInstitucion,
-            long idPeriodo,
-            CancellationToken cancellationToken)
+       long idInstitucion,
+       long idPeriodo,
+       CancellationToken cancellationToken)
         {
             return await _context.MapInstitucionPeriodos
+                .Include(x => x.Institucion)
+                .Include(x => x.Periodo)
+                    .ThenInclude(x => x.TipoPeriodo)
                 .FirstOrDefaultAsync(
-                    x => x.IdInstitucion == idInstitucion &&
-                         x.IdPeriodo == idPeriodo,
+                    x =>
+                        x.IdInstitucion == idInstitucion &&
+                        x.IdPeriodo == idPeriodo,
                     cancellationToken);
         }
 
@@ -64,11 +78,14 @@ namespace Seph.Principal.Infraestructure.Persistence.Repositories
  * y la captura se encuentra abierta.
  */
         public async Task<MapInstitucionPeriodo?> GetPeriodoActivoByInstitucionAsync(
-            long idInstitucion,
-            CancellationToken cancellationToken)
+       long idInstitucion,
+       CancellationToken cancellationToken)
         {
             return await _context.MapInstitucionPeriodos
                 .AsNoTracking()
+                .Include(x => x.Institucion)
+                .Include(x => x.Periodo)
+                    .ThenInclude(x => x.TipoPeriodo)
                 .Where(x =>
                     x.IdInstitucion == idInstitucion &&
                     x.BitActivo &&
@@ -86,7 +103,7 @@ namespace Seph.Principal.Infraestructure.Persistence.Repositories
         {
             _context.MapInstitucionPeriodos.Remove(mapInstitucionPeriodo);
         }
-
+       
         #endregion
     }
 }

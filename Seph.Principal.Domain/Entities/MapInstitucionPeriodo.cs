@@ -11,6 +11,9 @@ namespace Seph.Principal.Domain.Entities
         public long Id { get; set; }
 
         public long IdInstitucion { get; set; }
+        public Institucion Institucion { get; set; } = null!;
+
+        public CatPeriodo Periodo { get; set; } = null!;
 
         public long IdPeriodo { get; set; }
 
