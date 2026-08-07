@@ -118,6 +118,8 @@ namespace Seph.Principal.Infraestructure.DependencyInjection
             services.AddScoped<ICatDiscapacitadoRepository, CatDiscapacitadoRepository>();
             services.AddScoped<ICatSectorVinculadoRepository, CatSectorVinculadoRepository>();
             services.AddScoped<ICatMecanismoSeguimientoRepository, CatMecanismoSeguimientoRepository>();
+            services.AddScoped<ICatTipoPatenteRepository, CatTipoPatenteRepository>();
+            services.AddScoped<ICatEstatusPatenteRepository, CatEstatusPatenteRepository>();
             services.AddScoped<IMapEmpleadoPerfilAcademicoRepository, MapEmpleadoPerfilAcademicoRepository>();
             services.AddScoped<IHistorialContratoRepository, HistorialContratoRepository>();
             services.Configure<GoogleOptions>(configuration.GetSection(GoogleOptions.SectionName));
@@ -138,6 +140,8 @@ namespace Seph.Principal.Infraestructure.DependencyInjection
             services.AddScoped<IReporteVinculacionRepository, ReporteVinculacionRepository>();
             services.AddScoped<ISectorVinculadoVinculacionRepository,SectorVinculadoVinculacionRepository>();
             services.AddScoped<IReporteFinanzaRepository, ReporteFinanzaRepository>();
+            services.AddScoped<IReportePatenteRepository, ReportePatenteRepository>();
+            services.AddScoped<IInventorPatenteRepository, InventorPatenteRepository>();
             services.AddScoped<IProyectoFinanciadoRepository,ProyectoFinanciadoRepository>();
             // Registra los repositorios del módulo de análisis estratégico.
             services.AddScoped<ICatPreguntaAnalisisRepository,CatPreguntaAnalisisRepository>();

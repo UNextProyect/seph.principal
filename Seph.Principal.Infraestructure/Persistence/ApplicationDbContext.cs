@@ -23,6 +23,9 @@ namespace Seph.Principal.Infraestructure.Persistence
         public DbSet<CatInternet> CatInternets => Set<CatInternet>();
         public DbSet<CatMecanismoSeguimiento> CatMecanismos => Set<CatMecanismoSeguimiento>();
         public DbSet<CatSectorVinculado> CatSectores => Set<CatSectorVinculado>();
+        public DbSet<CatEstatusPatente> CatEstatusPatentes => Set<CatEstatusPatente>();
+        public DbSet<CatTipoPatente> CatTipoPatentes => Set<CatTipoPatente>();
+
 
         public DbSet<MapUserPerfilAcademico> MapUserPerfilesAcademicos => Set<MapUserPerfilAcademico>();
         public DbSet<MapEmpleadoPerfilAcademico> MapEmpleadoPerfilesAcademicos => Set<MapEmpleadoPerfilAcademico>();
@@ -48,6 +51,10 @@ namespace Seph.Principal.Infraestructure.Persistence
         public DbSet<CatPreguntaAnalisis> CatPreguntasAnalisis => Set<CatPreguntaAnalisis>();
         // Reportes de análisis estratégico por institución y periodo.
         public DbSet<ReporteAnalisisEstrategico> ReporteAnalisisEstrategicos => Set<ReporteAnalisisEstrategico>();
+        public DbSet<ReportePatente> ReportePatentes => Set<ReportePatente>();
+        public DbSet<InventorPatente> InventoresPatente=> Set<InventorPatente>();
+
+
         // Respuestas registradas dentro del análisis estratégico.
         public DbSet<RespuestaAnalisis> RespuestasAnalisis => Set<RespuestaAnalisis>();
 
