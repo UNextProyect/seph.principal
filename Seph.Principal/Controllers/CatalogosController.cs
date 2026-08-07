@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Seph.Principal.Application.Features.CatArea.Queries.GetArea;
 using Seph.Principal.Application.Features.CatDiscapacitado.Queries.GetDiscapacitado;
+using Seph.Principal.Application.Features.CatEstatusPatente.Queries.GetEstatusPatente;
 using Seph.Principal.Application.Features.CatInternet.Queries.GetInternet;
 using Seph.Principal.Application.Features.CatMecanismoSeguimiento.Queries.GetMecanismoSeguimiento;
 using Seph.Principal.Application.Features.CatMunicipio.Queries.GetCatMunicipio;
@@ -12,6 +13,7 @@ using Seph.Principal.Application.Features.CatPerfilAcademico.Queries.GetCatPerfi
 using Seph.Principal.Application.Features.CatSectorVinculado.Queries.GetSectorVinculado;
 using Seph.Principal.Application.Features.CatSexo.Queries.GetCatsexo;
 using Seph.Principal.Application.Features.CatTipoContrato.Queries.GetCatTipoContrato;
+using Seph.Principal.Application.Features.CatTipoPatente.Queries.GetTipoPatente;
 using Seph.Principal.Application.Features.CatTipoPeriodo.Queries;
 using Seph.Principal.Application.Features.CatTipoPersonal.Queries.GetCatTipoPersonal;
 
@@ -125,5 +127,29 @@ namespace Seph.Principal.Controllers
 
             return Ok(response);
         }
+
+        [HttpGet("tipo-patente")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetTipoPatente(CancellationToken cancellationToken)
+        {
+            var response = await sender.Send(
+                new GetCatTipoPatenteQuery(),
+                cancellationToken);
+
+            return Ok(response);
+        }
+
+        [HttpGet("estatus-patente")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetEstatusPatente(CancellationToken cancellationToken)
+        {
+            var response = await sender.Send(
+                new GetEstatusPatenteQuery(),
+                cancellationToken);
+
+            return Ok(response);
+        }
+
+
     }
 }
