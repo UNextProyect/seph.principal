@@ -137,10 +137,12 @@ namespace Seph.Principal.Infraestructure.DependencyInjection
             services.AddScoped<IReporteInfraestructuraRepository, ReporteInfraestructuraRepository>();
             services.AddScoped<IReporteVinculacionRepository, ReporteVinculacionRepository>();
             services.AddScoped<ISectorVinculadoVinculacionRepository,SectorVinculadoVinculacionRepository>();
-            services.AddScoped<IReporteVinculacionRepository, ReporteVinculacionRepository>();
-            services.AddScoped<ISectorVinculadoVinculacionRepository, SectorVinculadoVinculacionRepository>();
             services.AddScoped<IReporteFinanzaRepository, ReporteFinanzaRepository>();
             services.AddScoped<IProyectoFinanciadoRepository,ProyectoFinanciadoRepository>();
+            // Registra los repositorios del módulo de análisis estratégico.
+            services.AddScoped<ICatPreguntaAnalisisRepository,CatPreguntaAnalisisRepository>();
+            services.AddScoped<IReporteAnalisisEstrategicoRepository,ReporteAnalisisEstrategicoRepository>();
+            services.AddScoped<IRespuestaAnalisisRepository,RespuestaAnalisisRepository>();
             services.AddSingleton<IJwtTokenService, JwtTokenService>();
             services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
