@@ -44,7 +44,12 @@ namespace Seph.Principal.Infraestructure.Persistence
         public DbSet<EmailVerificationCode> EmailVerificationCodes => Set<EmailVerificationCode>();
         public DbSet<ReporteFinanza> ReporteFinanzas => Set<ReporteFinanza>();
         public DbSet<ProyectoFinanciado> ProyectoFinanciados => Set<ProyectoFinanciado>();
-
+        // Catálogo de preguntas para el análisis estratégico.
+        public DbSet<CatPreguntaAnalisis> CatPreguntasAnalisis => Set<CatPreguntaAnalisis>();
+        // Reportes de análisis estratégico por institución y periodo.
+        public DbSet<ReporteAnalisisEstrategico> ReporteAnalisisEstrategicos => Set<ReporteAnalisisEstrategico>();
+        // Respuestas registradas dentro del análisis estratégico.
+        public DbSet<RespuestaAnalisis> RespuestasAnalisis => Set<RespuestaAnalisis>();
 
 
         protected override void OnModelCreating(ModelBuilder builder)
