@@ -27,6 +27,8 @@ namespace Seph.Principal.Controllers
                 request.StrCurp,
                 request.IdSexo,
                 request.IdInstitucion,
+                request.StrRutaIne,
+                request.StrRutaFotografia,
                 request.DateTimeFechaRegistro,
                 request.IdUsuarioRegistro,
                 request.BitActivo,
@@ -75,8 +77,11 @@ namespace Seph.Principal.Controllers
                 request.StrApellidoPat,
                 request.StrApellidoMat,
                 request.StrCurp,
-                request.IdSexo
-                ));
+                request.IdSexo,
+                request.StrRutaIne,
+                request.StrRutaFotografia),
+              cancellationToken);
+                
 
             return FromResponse(response);
         }

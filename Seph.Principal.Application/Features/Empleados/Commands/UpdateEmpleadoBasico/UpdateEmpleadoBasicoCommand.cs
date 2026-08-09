@@ -9,11 +9,13 @@ namespace Seph.Principal.Application.Features.Empleados.Commands.UpdateEmpleadoB
     /// y editar la primera sub-pantalla de Información Personal.
     /// </summary>
     public sealed record UpdateEmpleadoBasicoCommand(
-        long IdEmpleado,
-        string StrNombre,
-        string StrApellidoPat,
-        string StrApellidoMat,
-        string StrCurp,
-        long IdSexo)
-        : IRequest<ResponseWrapper<string>>;
+    long IdEmpleado,
+    string StrNombre,
+    string StrApellidoPat,
+    string StrApellidoMat,
+    string StrCurp,
+    long IdSexo,
+    string? StrRutaIne,
+    string? StrRutaFotografia)
+    : IRequest<ResponseWrapper<string>>;
 }

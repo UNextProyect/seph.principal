@@ -13,6 +13,8 @@ namespace Seph.Principal.Application.Features.Empleados.DTOs
         string StrCurp,
         long IdSexo,
         long IdInstitucion,
+        string? StrRutaIne,
+        string? StrRutaFotografia,
         DateTime DateTimeFechaRegistro,
         Guid IdUsuarioRegistro,
         bool BitActivo,

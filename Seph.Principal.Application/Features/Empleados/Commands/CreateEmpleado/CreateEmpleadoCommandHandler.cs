@@ -20,6 +20,8 @@ namespace Seph.Principal.Application.Features.Empleados.Commands.CreateEmpleado
                 StrCurp = request.StrCurp,
                 IdSexo = request.IdSexo,
                 IdInstitucion = request.IdInstitucion,
+                StrRutaIne = request.StrRutaIne,
+                StrRutaFotografia = request.StrRutaFotografia,
                 DateTimeFechaRegistro = request.DateTimeFechaRegistro,
                 IdUsuarioRegistro = request.IdUsuarioRegistro,
                 BitActivo = request.BitActivo,
