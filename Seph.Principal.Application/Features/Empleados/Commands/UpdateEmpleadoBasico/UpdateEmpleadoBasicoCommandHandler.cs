@@ -30,6 +30,16 @@ namespace Seph.Principal.Application.Features.Empleados.Commands.UpdateEmpleadoB
             empleado.StrCurp = request.StrCurp;
             empleado.IdSexo = request.IdSexo;
 
+            if (!string.IsNullOrWhiteSpace(request.StrRutaIne))
+            {
+                empleado.StrRutaIne = request.StrRutaIne;
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.StrRutaFotografia))
+            {
+                empleado.StrRutaFotografia = request.StrRutaFotografia;
+            }
+
             empleadosRepository.Update(empleado);
 
             await unitOfWork.SaveChangesAsync(cancellationToken);

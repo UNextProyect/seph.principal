@@ -40,6 +40,12 @@ namespace Seph.Principal.Infraestructure.Persistence.Configurations
             builder.Property(x => x.StrSNII)
                 .HasMaxLength(12);
 
+            builder.Property(x => x.StrRutaIne)
+              .HasMaxLength(500);
+
+            builder.Property(x => x.StrRutaFotografia)
+                .HasMaxLength(500);
+
             builder.Property(x => x.BitDatosAcademicosCompletos)
                 .IsRequired();
 

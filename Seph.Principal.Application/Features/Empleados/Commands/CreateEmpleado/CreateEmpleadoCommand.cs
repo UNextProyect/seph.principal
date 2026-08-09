@@ -11,6 +11,8 @@ namespace Seph.Principal.Application.Features.Empleados.Commands.CreateEmpleado
         string StrCurp,
         long IdSexo,
         long IdInstitucion,
+        string? StrRutaIne,
+        string? StrRutaFotografia,
         DateTime DateTimeFechaRegistro,
         Guid IdUsuarioRegistro,
         bool BitActivo,

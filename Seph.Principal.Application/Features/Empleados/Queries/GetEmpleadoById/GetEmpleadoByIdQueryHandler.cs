@@ -35,6 +35,8 @@ namespace Seph.Principal.Application.Features.Empleados.Queries.GetEmpleadoById
                 empleado.StrCurp ?? string.Empty,
                 empleado.IdSexo,
                 empleado.StrSNII,
+                empleado.StrRutaIne,
+                empleado.StrRutaFotografia,
                 perfiles.Select(p => p.IdCatPerfilAcademico).ToList(),
                 empleado.BitDatosAcademicosCompletos);
 
