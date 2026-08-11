@@ -19,6 +19,8 @@ namespace Seph.Principal.Application.Features.Empleados.DTOs
         bool BitDatosAcademicosCompletos,
         bool BitContratoCompleto,
         string? StrSNII,
+        string? StrRutaIne,
+        string? StrRutaFotografia,
         IReadOnlyList<string> PerfilesAcademicos,
         string? StrInstitucion,
         string? StrTipoPersonal,

@@ -66,6 +66,8 @@ namespace Seph.Principal.Application.Features.Empleados.Queries.GetRegistrosPers
                     empleado.BitDatosAcademicosCompletos,
                     contrato is not null,
                     empleado.StrSNII,
+                    empleado.StrRutaIne,
+                    empleado.StrRutaFotografia,
                     nombresPerfiles,
                     contrato is null ? null : instituciones.FirstOrDefault(i => i.Id == contrato.IdInstitucion)?.StrNombre,
                     contrato is null ? null : tiposPersonal.FirstOrDefault(t => t.Id == contrato.IdTipoPersonal)?.StrValor,
