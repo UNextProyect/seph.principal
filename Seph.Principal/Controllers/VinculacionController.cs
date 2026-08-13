@@ -56,17 +56,21 @@ namespace Seph.Principal.Controllers
             return Ok(response);
         }
 
-        // Obtiene el comparativo de vinculación
-        // contra el periodo anterior.
-        [HttpGet("reporte-comparativo/{idMapInstitucionPeriodo:long}")]
+        // Compara los reportes de vinculación
+        // de dos periodos seleccionados.
+        [HttpGet(
+            "reporte-comparativo/{idMapPeriodoBase:long}/" +
+            "{idMapPeriodoComparacion:long}")]
         public async Task<IActionResult>
             GetReporteVinculacionComparativo(
-                long idMapInstitucionPeriodo,
+                long idMapPeriodoBase,
+                long idMapPeriodoComparacion,
                 CancellationToken cancellationToken)
         {
             var response = await mediator.Send(
                 new GetReporteVinculacionComparativoQuery(
-                    idMapInstitucionPeriodo),
+                    idMapPeriodoBase,
+                    idMapPeriodoComparacion),
                 cancellationToken);
 
             return Ok(response);

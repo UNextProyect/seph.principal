@@ -6,9 +6,14 @@ namespace Seph.Principal.Application.Features.ReporteInfraestructura
     .Queries.GetReporteInfraestructuraComparativo
 {
     /// <summary>
-    /// Solicita el comparativo de los indicadores de infraestructura
-    /// entre el periodo actual y el periodo anterior.
+    /// Solicita la comparación de los indicadores
+    /// de infraestructura entre dos periodos seleccionados.
     /// </summary>
     public sealed record GetReporteInfraestructuraComparativoQuery(
-        long IdMapInstitucionPeriodo): IRequest<ResponseWrapper<IReadOnlyCollection<ReporteInfraestructuraComparativoDto>>>;
+        long IdMapPeriodoBase,
+        long IdMapPeriodoComparacion)
+        : IRequest<
+            ResponseWrapper<
+                IReadOnlyCollection<
+                    ReporteInfraestructuraComparativoDto>>>;
 }

@@ -6,12 +6,14 @@ namespace Seph.Principal.Application.Features.ReportePatente
     .Queries.GetReportePatenteComparativo
 {
     /// <summary>
-    /// Solicita el comparativo del total de patentes
-    /// entre el periodo actual y el periodo anterior.
+    /// Solicita la comparación del total de patentes
+    /// entre dos periodos seleccionados.
     /// </summary>
     public sealed record GetReportePatenteComparativoQuery(
-        long IdMapInstitucionPeriodo)
+        long IdMapPeriodoBase,
+        long IdMapPeriodoComparacion)
         : IRequest<
             ResponseWrapper<
-                IReadOnlyCollection<ReportePatenteComparativoDto>>>;
+                IReadOnlyCollection<
+                    ReportePatenteComparativoDto>>>;
 }

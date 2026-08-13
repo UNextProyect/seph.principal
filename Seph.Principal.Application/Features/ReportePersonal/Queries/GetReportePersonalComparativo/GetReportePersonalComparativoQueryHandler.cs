@@ -19,92 +19,131 @@ namespace Seph.Principal.Application.Features.ReportePersonal.Queries.GetReporte
             GetReportePersonalComparativoQuery,
             ResponseWrapper<ReportePersonalComparativoDto>>
     {
-        public async Task<ResponseWrapper<ReportePersonalComparativoDto>> Handle(
+        public async Task<
+            ResponseWrapper<ReportePersonalComparativoDto>> Handle(
             GetReportePersonalComparativoQuery request,
             CancellationToken cancellationToken)
         {
-            // Obtiene el reporte actual.
-            var reporteActual = await reportePersonalRepository
-                .GetByMapInstitucionPeriodoAsync(
-                    request.IdMapInstitucionPeriodo,
+            /*
+             * Evita comparar dos veces la misma
+             * relación institución-periodo.
+             */
+            if (request.IdMapPeriodoBase ==
+                request.IdMapPeriodoComparacion)
+            {
+                return ResponseFactory
+                    .Failure<ReportePersonalComparativoDto>(
+                        "Selecciona dos periodos diferentes.",
+                        HttpStatusCode.BadRequest);
+            }
+
+            /*
+             * Obtiene las relaciones institución-periodo
+             * seleccionadas por el usuario.
+             */
+            var mapPeriodoBase =
+                await mapInstitucionPeriodoRepository.GetByIdAsync(
+                    request.IdMapPeriodoBase,
                     cancellationToken);
 
-            if (reporteActual is null)
-            {
-                return ResponseFactory.Failure<ReportePersonalComparativoDto>(
-                    "No existe un reporte de personal para este periodo.",
-                    HttpStatusCode.NotFound);
-            }
-
-            // Obtiene la relación institución-periodo actual.
-            var mapActual = await mapInstitucionPeriodoRepository.GetByIdAsync(
-                request.IdMapInstitucionPeriodo,
-                cancellationToken);
-
-            if (mapActual is null)
-            {
-                return ResponseFactory.Failure<ReportePersonalComparativoDto>(
-                    "No existe la relación institución-periodo.",
-                    HttpStatusCode.NotFound);
-            }
-
-            // Obtiene los datos del periodo actual.
-            var periodoActual = await catPeriodoRepository.GetByIdAsync(
-                mapActual.IdPeriodo,
-                cancellationToken);
-
-            if (periodoActual is null)
-            {
-                return ResponseFactory.Failure<ReportePersonalComparativoDto>(
-                    "No existe el periodo actual.",
-                    HttpStatusCode.NotFound);
-            }
-
-            // Busca el reporte anterior de la misma institución.
-            var reporteAnterior = await reportePersonalRepository
-                .GetPreviousReporteAsync(
-                    mapActual.IdInstitucion,
-                    periodoActual.IntAnio,
-                    periodoActual.IntNumeroPeriodo,
+            var mapPeriodoComparacion =
+                await mapInstitucionPeriodoRepository.GetByIdAsync(
+                    request.IdMapPeriodoComparacion,
                     cancellationToken);
 
-            if (reporteAnterior is null)
+            if (mapPeriodoBase is null ||
+                mapPeriodoComparacion is null)
             {
-                var sinAnterior = new ReportePersonalComparativoDto(
-                    periodoActual.StrValor,
-                    reporteActual.IntTotalGeneral,
-                    null,
-                    null,
-                    0,
-                    0,
-                    "Sin periodo anterior");
-
-                return ResponseFactory.Success(
-                    sinAnterior,
-                    "No existe un periodo anterior para comparar.");
+                return ResponseFactory
+                    .Failure<ReportePersonalComparativoDto>(
+                        "No se encontró uno de los periodos seleccionados.",
+                        HttpStatusCode.NotFound);
             }
 
-            var mapAnterior = await mapInstitucionPeriodoRepository.GetByIdAsync(
-                reporteAnterior.IdMapInstitucionPeriodo,
-                cancellationToken);
+            /*
+             * La comparación solamente es válida cuando
+             * ambos periodos pertenecen a la misma institución.
+             */
+            if (mapPeriodoBase.IdInstitucion !=
+                mapPeriodoComparacion.IdInstitucion)
+            {
+                return ResponseFactory
+                    .Failure<ReportePersonalComparativoDto>(
+                        "Los periodos seleccionados no pertenecen " +
+                        "a la misma institución.",
+                        HttpStatusCode.BadRequest);
+            }
 
-            var periodoAnterior = mapAnterior is null
-                ? null
-                : await catPeriodoRepository.GetByIdAsync(
-                    mapAnterior.IdPeriodo,
+            /*
+             * Obtiene los reportes de Personal
+             * correspondientes a ambos periodos.
+             */
+            var reporteBase =
+                await reportePersonalRepository
+                    .GetByMapInstitucionPeriodoAsync(
+                        request.IdMapPeriodoBase,
+                        cancellationToken);
+
+            var reporteComparacion =
+                await reportePersonalRepository
+                    .GetByMapInstitucionPeriodoAsync(
+                        request.IdMapPeriodoComparacion,
+                        cancellationToken);
+
+            if (reporteBase is null ||
+                reporteComparacion is null)
+            {
+                return ResponseFactory
+                    .Failure<ReportePersonalComparativoDto>(
+                        "Uno de los periodos no tiene un reporte " +
+                        "de Personal registrado.",
+                        HttpStatusCode.NotFound);
+            }
+
+            /*
+             * Consulta los nombres de los periodos
+             * para incluirlos en el resultado.
+             */
+            var periodoBase =
+                await catPeriodoRepository.GetByIdAsync(
+                    mapPeriodoBase.IdPeriodo,
                     cancellationToken);
 
+            var periodoComparacion =
+                await catPeriodoRepository.GetByIdAsync(
+                    mapPeriodoComparacion.IdPeriodo,
+                    cancellationToken);
+
+            if (periodoBase is null ||
+                periodoComparacion is null)
+            {
+                return ResponseFactory
+                    .Failure<ReportePersonalComparativoDto>(
+                        "No se encontró la información de uno " +
+                        "de los periodos seleccionados.",
+                        HttpStatusCode.NotFound);
+            }
+
+            /*
+             * La diferencia representa el total del periodo base
+             * menos el total del periodo de comparación.
+             */
             var diferencia =
-                reporteActual.IntTotalGeneral -
-                reporteAnterior.IntTotalGeneral;
+                reporteBase.IntTotalGeneral -
+                reporteComparacion.IntTotalGeneral;
 
-            var porcentaje = reporteAnterior.IntTotalGeneral == 0
-                ? 0
-                : Math.Round(
-                    (decimal)diferencia /
-                    reporteAnterior.IntTotalGeneral *
-                    100,
-                    2);
+            /*
+             * Evita una división entre cero cuando el periodo
+             * de comparación no tiene personal registrado.
+             */
+            var porcentaje =
+                reporteComparacion.IntTotalGeneral == 0
+                    ? 0
+                    : Math.Round(
+                        (decimal)diferencia /
+                        reporteComparacion.IntTotalGeneral *
+                        100,
+                        2);
 
             var estado = diferencia > 0
                 ? "Aumentó"
@@ -112,18 +151,19 @@ namespace Seph.Principal.Application.Features.ReportePersonal.Queries.GetReporte
                     ? "Disminuyó"
                     : "Sin cambios";
 
-            var dto = new ReportePersonalComparativoDto(
-                periodoActual.StrValor,
-                reporteActual.IntTotalGeneral,
-                periodoAnterior?.StrValor,
-                reporteAnterior.IntTotalGeneral,
-                diferencia,
-                porcentaje,
-                estado);
+            var comparativo =
+                new ReportePersonalComparativoDto(
+                    periodoBase.StrValor,
+                    reporteBase.IntTotalGeneral,
+                    periodoComparacion.StrValor,
+                    reporteComparacion.IntTotalGeneral,
+                    diferencia,
+                    porcentaje,
+                    estado);
 
             return ResponseFactory.Success(
-                dto,
-                "Comparativo de personal obtenido correctamente");
+                comparativo,
+                "Comparativo de Personal obtenido correctamente.");
         }
     }
 }

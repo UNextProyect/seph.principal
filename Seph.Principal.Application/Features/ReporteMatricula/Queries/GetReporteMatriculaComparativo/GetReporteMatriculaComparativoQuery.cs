@@ -10,7 +10,14 @@ using Seph.Principal.Application.Features.ReporteMatricula.DTOs;
 namespace Seph.Principal.Application.Features.ReporteMatricula.Queries.GetReporteMatriculaComparativo
 {
 
-    public sealed record GetReporteMatriculaComparativoQuery(long IdMapInstitucionPeriodo)
-        : IRequest<ResponseWrapper<ReporteMatriculaComparativoDto>>;
+    /// <summary>
+    /// Solicita la comparación de matrícula
+    /// entre dos periodos seleccionados.
+    /// </summary>
+    public sealed record GetReporteMatriculaComparativoQuery(
+        long IdMapPeriodoBase,
+        long IdMapPeriodoComparacion)
+        : IRequest<
+            ResponseWrapper<ReporteMatriculaComparativoDto>>;
 
 }

@@ -9,7 +9,13 @@ using Seph.Principal.Application.Features.ReportePersonal.DTOs;
 
 namespace Seph.Principal.Application.Features.ReportePersonal.Queries.GetReportePersonalComparativo
 {
+    /*
+     * Solicita la comparación de los reportes de personal
+     * correspondientes a dos periodos seleccionados.
+     */
     public sealed record GetReportePersonalComparativoQuery(
-        long IdMapInstitucionPeriodo)
-        : IRequest<ResponseWrapper<ReportePersonalComparativoDto>>;
+        long IdMapPeriodoBase,
+        long IdMapPeriodoComparacion)
+        : IRequest<
+            ResponseWrapper<ReportePersonalComparativoDto>>;
 }

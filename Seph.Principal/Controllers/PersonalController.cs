@@ -50,15 +50,19 @@ namespace Seph.Principal.Controllers
             return Ok(response);
         }
 
-        // Obtiene el comparativo de personal contra el periodo anterior.
-        [HttpGet("reporte-comparativo/{idMapInstitucionPeriodo:long}")]
+        // Compara los reportes de personal de dos periodos seleccionados.
+        [HttpGet(
+            "reporte-comparativo/{idMapPeriodoBase:long}/" +
+            "{idMapPeriodoComparacion:long}")]
         public async Task<IActionResult> GetReportePersonalComparativo(
-            long idMapInstitucionPeriodo,
+            long idMapPeriodoBase,
+            long idMapPeriodoComparacion,
             CancellationToken cancellationToken)
         {
             var response = await mediator.Send(
                 new GetReportePersonalComparativoQuery(
-                    idMapInstitucionPeriodo),
+                    idMapPeriodoBase,
+                    idMapPeriodoComparacion),
                 cancellationToken);
 
             return Ok(response);

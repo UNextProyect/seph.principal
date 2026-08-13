@@ -77,14 +77,22 @@ namespace Seph.Principal.Controllers
 
             return Ok(response);
         }
-        // Obtiene el comparativo de matrícula contra el periodo anterior.
-        [HttpGet("reporte-comparativo/{idMapInstitucionPeriodo:long}")]
-        public async Task<IActionResult> GetReporteMatriculaComparativo(
-            long idMapInstitucionPeriodo,
-            CancellationToken cancellationToken)
+        // Obtiene el comparativo de matrícula
+        // entre dos periodos seleccionados.
+        [HttpGet(
+            "reporte-comparativo/" +
+            "{idMapPeriodoBase:long}/" +
+            "{idMapPeriodoComparacion:long}")]
+        public async Task<IActionResult>
+            GetReporteMatriculaComparativo(
+                long idMapPeriodoBase,
+                long idMapPeriodoComparacion,
+                CancellationToken cancellationToken)
         {
             var response = await mediator.Send(
-                new GetReporteMatriculaComparativoQuery(idMapInstitucionPeriodo),
+                new GetReporteMatriculaComparativoQuery(
+                    idMapPeriodoBase,
+                    idMapPeriodoComparacion),
                 cancellationToken);
 
             return Ok(response);

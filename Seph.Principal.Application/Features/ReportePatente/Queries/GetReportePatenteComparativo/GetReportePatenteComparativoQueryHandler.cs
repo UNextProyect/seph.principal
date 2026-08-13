@@ -9,8 +9,8 @@ namespace Seph.Principal.Application.Features.ReportePatente
     .Queries.GetReportePatenteComparativo
 {
     /// <summary>
-    /// Obtiene el comparativo del total de patentes
-    /// entre el periodo actual y el periodo anterior.
+    /// Compara el total de patentes registradas
+    /// en dos periodos seleccionados.
     /// </summary>
     public sealed class GetReportePatenteComparativoQueryHandler(
         IReportePatenteRepository reportePatenteRepository,
@@ -19,201 +19,196 @@ namespace Seph.Principal.Application.Features.ReportePatente
         : IRequestHandler<
             GetReportePatenteComparativoQuery,
             ResponseWrapper<
-                IReadOnlyCollection<ReportePatenteComparativoDto>>>
+                IReadOnlyCollection<
+                    ReportePatenteComparativoDto>>>
     {
         public async Task<
             ResponseWrapper<
-                IReadOnlyCollection<ReportePatenteComparativoDto>>>
-            Handle(
+                IReadOnlyCollection<
+                    ReportePatenteComparativoDto>>> Handle(
                 GetReportePatenteComparativoQuery request,
                 CancellationToken cancellationToken)
         {
-            // Obtiene las patentes registradas
-            // en el periodo actual.
-            var reportesActuales =
+            /*
+             * Evita comparar dos veces la misma
+             * relación institución-periodo.
+             */
+            if (
+                request.IdMapPeriodoBase ==
+                request.IdMapPeriodoComparacion
+            )
+            {
+                return ResponseFactory.Failure<
+                    IReadOnlyCollection<
+                        ReportePatenteComparativoDto>>(
+                    "Selecciona dos periodos diferentes.",
+                    HttpStatusCode.BadRequest);
+            }
+
+            /*
+             * Obtiene las relaciones institución-periodo
+             * seleccionadas para la comparación.
+             */
+            var mapPeriodoBase =
+                await mapInstitucionPeriodoRepository.GetByIdAsync(
+                    request.IdMapPeriodoBase,
+                    cancellationToken);
+
+            var mapPeriodoComparacion =
+                await mapInstitucionPeriodoRepository.GetByIdAsync(
+                    request.IdMapPeriodoComparacion,
+                    cancellationToken);
+
+            if (
+                mapPeriodoBase is null ||
+                mapPeriodoComparacion is null
+            )
+            {
+                return ResponseFactory.Failure<
+                    IReadOnlyCollection<
+                        ReportePatenteComparativoDto>>(
+                    "No se encontró uno de los periodos seleccionados.",
+                    HttpStatusCode.NotFound);
+            }
+
+            /*
+             * Los periodos deben pertenecer
+             * a la misma institución.
+             */
+            if (
+                mapPeriodoBase.IdInstitucion !=
+                mapPeriodoComparacion.IdInstitucion
+            )
+            {
+                return ResponseFactory.Failure<
+                    IReadOnlyCollection<
+                        ReportePatenteComparativoDto>>(
+                    "Los periodos seleccionados no pertenecen " +
+                    "a la misma institución.",
+                    HttpStatusCode.BadRequest);
+            }
+
+            /*
+             * Obtiene todas las patentes registradas
+             * dentro de cada periodo seleccionado.
+             */
+            var reportesBase =
                 await reportePatenteRepository
                     .GetByMapInstitucionPeriodoAsync(
-                        request.IdMapInstitucionPeriodo,
+                        request.IdMapPeriodoBase,
                         cancellationToken);
 
-            if (!reportesActuales.Any())
-            {
-                return ResponseFactory.Failure<
-                    IReadOnlyCollection<ReportePatenteComparativoDto>>(
-                    "No existen reportes de patentes para este periodo.",
-                    HttpStatusCode.NotFound);
-            }
-
-            // Obtiene la relación institución-periodo actual.
-            var mapActual =
-                await mapInstitucionPeriodoRepository
-                    .GetByIdAsync(
-                        request.IdMapInstitucionPeriodo,
-                        cancellationToken);
-
-            if (mapActual is null)
-            {
-                return ResponseFactory.Failure<
-                    IReadOnlyCollection<ReportePatenteComparativoDto>>(
-                    "No existe la relación institución-periodo.",
-                    HttpStatusCode.NotFound);
-            }
-
-            // Obtiene la información del periodo actual.
-            var periodoActual =
-                await catPeriodoRepository
-                    .GetByIdAsync(
-                        mapActual.IdPeriodo,
-                        cancellationToken);
-
-            if (periodoActual is null)
-            {
-                return ResponseFactory.Failure<
-                    IReadOnlyCollection<ReportePatenteComparativoDto>>(
-                    "No existe el periodo actual.",
-                    HttpStatusCode.NotFound);
-            }
-
-            // Busca las patentes del periodo anterior
-            // pertenecientes a la misma institución.
-            var reportesAnteriores =
+            var reportesComparacion =
                 await reportePatenteRepository
-                    .GetPreviousReportesAsync(
-                        mapActual.IdInstitucion,
-                        periodoActual.IntAnio,
-                        periodoActual.IntNumeroPeriodo,
+                    .GetByMapInstitucionPeriodoAsync(
+                        request.IdMapPeriodoComparacion,
                         cancellationToken);
 
-            var totalActual =
-                reportesActuales.Count;
-
-            if (!reportesAnteriores.Any())
+            if (
+                !reportesBase.Any() ||
+                !reportesComparacion.Any()
+            )
             {
-                IReadOnlyCollection<ReportePatenteComparativoDto>
-                    comparativosSinAnterior =
-                    CrearComparativosSinPeriodoAnterior(
-                        periodoActual.StrValor,
-                        totalActual);
-
-                return ResponseFactory.Success(
-                    comparativosSinAnterior,
-                    "No existe un periodo anterior para comparar.");
+                return ResponseFactory.Failure<
+                    IReadOnlyCollection<
+                        ReportePatenteComparativoDto>>(
+                    "Uno de los periodos no tiene patentes registradas.",
+                    HttpStatusCode.NotFound);
             }
 
-            var primerReporteAnterior =
-                reportesAnteriores.First();
+            /*
+             * Consulta los nombres de los periodos
+             * que se mostrarán en el frontend.
+             */
+            var periodoBase =
+                await catPeriodoRepository.GetByIdAsync(
+                    mapPeriodoBase.IdPeriodo,
+                    cancellationToken);
 
-            var mapAnterior =
-                await mapInstitucionPeriodoRepository
-                    .GetByIdAsync(
-                        primerReporteAnterior.IdMapInstitucionPeriodo,
-                        cancellationToken);
+            var periodoComparacion =
+                await catPeriodoRepository.GetByIdAsync(
+                    mapPeriodoComparacion.IdPeriodo,
+                    cancellationToken);
 
-            var periodoAnterior =
-                mapAnterior is null
-                    ? null
-                    : await catPeriodoRepository.GetByIdAsync(
-                        mapAnterior.IdPeriodo,
-                        cancellationToken);
+            if (
+                periodoBase is null ||
+                periodoComparacion is null
+            )
+            {
+                return ResponseFactory.Failure<
+                    IReadOnlyCollection<
+                        ReportePatenteComparativoDto>>(
+                    "No se encontró la información de uno " +
+                    "de los periodos seleccionados.",
+                    HttpStatusCode.NotFound);
+            }
 
-            var totalAnterior =
-                reportesAnteriores.Count;
+            /*
+             * Cuenta las patentes registradas
+             * dentro de cada periodo.
+             */
+            var totalBase =
+                reportesBase.Count;
 
-            IReadOnlyCollection<ReportePatenteComparativoDto>
-                comparativos =
+            var totalComparacion =
+                reportesComparacion.Count;
+
+            IReadOnlyCollection<
+                ReportePatenteComparativoDto> comparativos =
                 new List<ReportePatenteComparativoDto>
                 {
                     CrearComparativo(
                         "Patentes registradas",
-                        periodoActual.StrValor,
-                        totalActual,
-                        periodoAnterior?.StrValor,
-                        totalAnterior)
+                        periodoBase.StrValor,
+                        totalBase,
+                        periodoComparacion.StrValor,
+                        totalComparacion)
                 };
 
             return ResponseFactory.Success(
                 comparativos,
-                "Comparativo de patentes obtenido correctamente");
+                "Comparativo de Patentes obtenido correctamente.");
         }
 
         /// <summary>
-        /// Construye el comparativo del total de patentes.
+        /// Calcula la diferencia, el cambio porcentual
+        /// y el estado del total de patentes.
         /// </summary>
-        private static ReportePatenteComparativoDto CrearComparativo(
-            string indicador,
-            string periodoActual,
-            int valorActual,
-            string? periodoAnterior,
-            int valorAnterior)
+        private static ReportePatenteComparativoDto
+            CrearComparativo(
+                string indicador,
+                string periodoBase,
+                int valorBase,
+                string periodoComparacion,
+                int valorComparacion)
         {
             var diferencia =
-                valorActual - valorAnterior;
+                valorBase - valorComparacion;
 
-            var porcentaje =
-                valorAnterior == 0
+            var porcentajeCambio =
+                valorComparacion == 0
                     ? 0
                     : Math.Round(
                         (decimal)diferencia /
-                        valorAnterior *
+                        valorComparacion *
                         100,
                         2);
 
-            var estado =
-                diferencia > 0
-                    ? "Aumentó"
-                    : diferencia < 0
-                        ? "Disminuyó"
-                        : "Sin cambios";
+            var estado = diferencia > 0
+                ? "Aumentó"
+                : diferencia < 0
+                    ? "Disminuyó"
+                    : "Sin cambios";
 
             return new ReportePatenteComparativoDto(
                 indicador,
-                periodoActual,
-                valorActual,
-                periodoAnterior,
-                valorAnterior,
+                periodoBase,
+                valorBase,
+                periodoComparacion,
+                valorComparacion,
                 diferencia,
-                porcentaje,
+                porcentajeCambio,
                 estado);
-        }
-
-        /// <summary>
-        /// Construye el comparativo cuando no existen
-        /// patentes correspondientes al periodo anterior.
-        /// </summary>
-        private static IReadOnlyCollection<
-            ReportePatenteComparativoDto>
-            CrearComparativosSinPeriodoAnterior(
-                string periodoActual,
-                int totalActual)
-        {
-            return new List<ReportePatenteComparativoDto>
-            {
-                CrearSinPeriodoAnterior(
-                    "Patentes registradas",
-                    periodoActual,
-                    totalActual)
-            };
-        }
-
-        /// <summary>
-        /// Construye un indicador cuando no existe
-        /// información del periodo anterior.
-        /// </summary>
-        private static ReportePatenteComparativoDto
-            CrearSinPeriodoAnterior(
-                string indicador,
-                string periodoActual,
-                int valorActual)
-        {
-            return new ReportePatenteComparativoDto(
-                indicador,
-                periodoActual,
-                valorActual,
-                null,
-                null,
-                0,
-                0,
-                "Sin periodo anterior");
         }
     }
 }

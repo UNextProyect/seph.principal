@@ -36,6 +36,27 @@ namespace Seph.Principal.Infraestructure.Persistence.Repositories
                 .ToListAsync(cancellationToken);
         }
 
+        /*
+         * Obtiene todos los periodos asignados
+        * a una institución.
+        */
+   public async Task<IReadOnlyList<MapInstitucionPeriodo>> GetByInstitucionAsync(
+            long idInstitucion,
+            CancellationToken cancellationToken)
+        {
+            return await _context.MapInstitucionPeriodos
+                .AsNoTracking()
+                .Include(x => x.Institucion)
+                .Include(x => x.Periodo)
+                    .ThenInclude(x => x.TipoPeriodo)
+                .Where(x =>
+                    x.IdInstitucion == idInstitucion)
+                .OrderByDescending(x => x.Periodo.IntAnio)
+                .ThenByDescending(x => x.Periodo.IntNumeroPeriodo)
+                .ThenByDescending(x => x.Id)
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<MapInstitucionPeriodo?> GetByIdAsync(
         long id,
         CancellationToken cancellationToken)

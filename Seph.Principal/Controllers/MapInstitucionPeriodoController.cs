@@ -6,6 +6,7 @@ using Seph.Principal.Application.Features.MapInstitucionPeriodo.Commands.CreateM
 using Seph.Principal.Application.Features.MapInstitucionPeriodo.Commands.UpdateMapInstitucionPeriodo;
 using Seph.Principal.Application.Features.MapInstitucionPeriodo.Queries.GetMapInstitucionPeriodo;
 using Seph.Principal.Application.Features.MapInstitucionPeriodo.Queries.GetMapInstitucionPeriodos;
+using Seph.Principal.Application.Features.MapInstitucionPeriodo.Queries.GetMapInstitucionPeriodosUsuario;
 
 namespace Seph.Principal.Controllers
 {
@@ -79,6 +80,23 @@ namespace Seph.Principal.Controllers
         {
             var response = await sender.Send(
                 new GetMapInstitucionPeriodosQuery(),
+                cancellationToken);
+
+            return FromResponse(response);
+        }
+
+        /// <summary>
+        /// Obtiene los periodos asignados
+        /// a la institución del usuario autenticado.
+        /// GET /api/v1/mapinstitucionperiodo/usuario
+        /// </summary>
+        [Authorize]
+        [HttpGet("usuario")]
+        public async Task<IActionResult> GetByUsuario(
+            CancellationToken cancellationToken)
+        {
+            var response = await sender.Send(
+                new GetMapInstitucionPeriodosUsuarioQuery(),
                 cancellationToken);
 
             return FromResponse(response);
