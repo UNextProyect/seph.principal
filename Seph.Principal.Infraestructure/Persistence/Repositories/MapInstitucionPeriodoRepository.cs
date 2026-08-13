@@ -77,6 +77,7 @@ namespace Seph.Principal.Infraestructure.Persistence.Repositories
        CancellationToken cancellationToken)
         {
             return await _context.MapInstitucionPeriodos
+                .AsNoTracking()
                 .Include(x => x.Institucion)
                 .Include(x => x.Periodo)
                     .ThenInclude(x => x.TipoPeriodo)
