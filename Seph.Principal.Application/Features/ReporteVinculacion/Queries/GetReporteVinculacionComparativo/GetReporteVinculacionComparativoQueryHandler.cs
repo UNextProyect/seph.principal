@@ -8,8 +8,8 @@ namespace Seph.Principal.Application.Features.ReporteVinculacion
     .Queries.GetReporteVinculacionComparativo
 {
     /// <summary>
-    /// Obtiene el comparativo de convenios activos
-    /// entre el periodo actual y el periodo anterior.
+    /// Compara los indicadores de vinculación
+    /// correspondientes a dos periodos seleccionados.
     /// </summary>
     public sealed class GetReporteVinculacionComparativoQueryHandler(
         IReporteVinculacionRepository reporteVinculacionRepository,
@@ -18,124 +18,175 @@ namespace Seph.Principal.Application.Features.ReporteVinculacion
         : IRequestHandler<
             GetReporteVinculacionComparativoQuery,
             ResponseWrapper<
-                IReadOnlyCollection<ReporteVinculacionComparativoDto>>>
+                IReadOnlyCollection<
+                    ReporteVinculacionComparativoDto>>>
     {
         public async Task<
             ResponseWrapper<
-                IReadOnlyCollection<ReporteVinculacionComparativoDto>>>
-            Handle(
+                IReadOnlyCollection<
+                    ReporteVinculacionComparativoDto>>> Handle(
                 GetReporteVinculacionComparativoQuery request,
                 CancellationToken cancellationToken)
         {
-            // Obtiene el reporte de vinculación del periodo actual.
-            var reporteActual = await reporteVinculacionRepository
-                .GetByMapInstitucionPeriodoAsync(
-                    request.IdMapInstitucionPeriodo,
-                    cancellationToken);
-
-            if (reporteActual is null)
+            /*
+             * Evita comparar dos veces la misma
+             * relación institución-periodo.
+             */
+            if (
+                request.IdMapPeriodoBase ==
+                request.IdMapPeriodoComparacion
+            )
             {
                 return ResponseFactory.Failure<
-                    IReadOnlyCollection<ReporteVinculacionComparativoDto>>(
-                    "No existe un reporte de vinculación para este periodo.",
+                    IReadOnlyCollection<
+                        ReporteVinculacionComparativoDto>>(
+                    "Selecciona dos periodos diferentes.",
+                    HttpStatusCode.BadRequest);
+            }
+
+            /*
+             * Obtiene las relaciones institución-periodo
+             * seleccionadas para la comparación.
+             */
+            var mapPeriodoBase =
+                await mapInstitucionPeriodoRepository.GetByIdAsync(
+                    request.IdMapPeriodoBase,
+                    cancellationToken);
+
+            var mapPeriodoComparacion =
+                await mapInstitucionPeriodoRepository.GetByIdAsync(
+                    request.IdMapPeriodoComparacion,
+                    cancellationToken);
+
+            if (
+                mapPeriodoBase is null ||
+                mapPeriodoComparacion is null
+            )
+            {
+                return ResponseFactory.Failure<
+                    IReadOnlyCollection<
+                        ReporteVinculacionComparativoDto>>(
+                    "No se encontró uno de los periodos seleccionados.",
                     HttpStatusCode.NotFound);
             }
 
-            // Obtiene la relación institución-periodo actual.
-            var mapActual = await mapInstitucionPeriodoRepository
-                .GetByIdAsync(
-                    request.IdMapInstitucionPeriodo,
-                    cancellationToken);
-
-            if (mapActual is null)
+            /*
+             * Ambos periodos deben pertenecer
+             * a la misma institución.
+             */
+            if (
+                mapPeriodoBase.IdInstitucion !=
+                mapPeriodoComparacion.IdInstitucion
+            )
             {
                 return ResponseFactory.Failure<
-                    IReadOnlyCollection<ReporteVinculacionComparativoDto>>(
-                    "No existe la relación institución-periodo.",
+                    IReadOnlyCollection<
+                        ReporteVinculacionComparativoDto>>(
+                    "Los periodos seleccionados no pertenecen " +
+                    "a la misma institución.",
+                    HttpStatusCode.BadRequest);
+            }
+
+            /*
+             * Obtiene los reportes de Vinculación
+             * correspondientes a los dos periodos.
+             */
+            var reporteBase =
+                await reporteVinculacionRepository
+                    .GetByMapInstitucionPeriodoAsync(
+                        request.IdMapPeriodoBase,
+                        cancellationToken);
+
+            var reporteComparacion =
+                await reporteVinculacionRepository
+                    .GetByMapInstitucionPeriodoAsync(
+                        request.IdMapPeriodoComparacion,
+                        cancellationToken);
+
+            if (
+                reporteBase is null ||
+                reporteComparacion is null
+            )
+            {
+                return ResponseFactory.Failure<
+                    IReadOnlyCollection<
+                        ReporteVinculacionComparativoDto>>(
+                    "Uno de los periodos no tiene un reporte " +
+                    "de Vinculación registrado.",
                     HttpStatusCode.NotFound);
             }
 
-            // Obtiene la información del periodo actual.
-            var periodoActual = await catPeriodoRepository
-                .GetByIdAsync(
-                    mapActual.IdPeriodo,
+            /*
+             * Consulta los nombres de los periodos
+             * que se incluirán en el resultado.
+             */
+            var periodoBase =
+                await catPeriodoRepository.GetByIdAsync(
+                    mapPeriodoBase.IdPeriodo,
                     cancellationToken);
 
-            if (periodoActual is null)
+            var periodoComparacion =
+                await catPeriodoRepository.GetByIdAsync(
+                    mapPeriodoComparacion.IdPeriodo,
+                    cancellationToken);
+
+            if (
+                periodoBase is null ||
+                periodoComparacion is null
+            )
             {
                 return ResponseFactory.Failure<
-                    IReadOnlyCollection<ReporteVinculacionComparativoDto>>(
-                    "No existe el periodo actual.",
+                    IReadOnlyCollection<
+                        ReporteVinculacionComparativoDto>>(
+                    "No se encontró la información de uno " +
+                    "de los periodos seleccionados.",
                     HttpStatusCode.NotFound);
             }
 
-            // Busca el reporte anterior de la misma institución.
-            var reporteAnterior = await reporteVinculacionRepository
-                .GetPreviousReporteAsync(
-                    mapActual.IdInstitucion,
-                    periodoActual.IntAnio,
-                    periodoActual.IntNumeroPeriodo,
-                    cancellationToken);
-
-            if (reporteAnterior is null)
-            {
-                IReadOnlyCollection<ReporteVinculacionComparativoDto>
-                    comparativosSinAnterior =
-                    CrearComparativosSinPeriodoAnterior(
-                        periodoActual.StrValor,
-                        reporteActual);
-
-                return ResponseFactory.Success(
-                    comparativosSinAnterior,
-                    "No existe un periodo anterior para comparar.");
-            }
-
-            var mapAnterior = await mapInstitucionPeriodoRepository
-                .GetByIdAsync(
-                    reporteAnterior.IdMapInstitucionPeriodo,
-                    cancellationToken);
-
-            var periodoAnterior = mapAnterior is null
-                ? null
-                : await catPeriodoRepository.GetByIdAsync(
-                    mapAnterior.IdPeriodo,
-                    cancellationToken);
-
-            IReadOnlyCollection<ReporteVinculacionComparativoDto>
-                comparativos = new List<ReporteVinculacionComparativoDto>
+            /*
+             * Actualmente se compara el total
+             * de convenios activos.
+             */
+            IReadOnlyCollection<
+                ReporteVinculacionComparativoDto> comparativos =
+                new List<ReporteVinculacionComparativoDto>
                 {
                     CrearComparativo(
                         "Convenios activos",
-                        periodoActual.StrValor,
-                        reporteActual.IntTotalConveniosActivos,
-                        periodoAnterior?.StrValor,
-                        reporteAnterior.IntTotalConveniosActivos)
+                        periodoBase.StrValor,
+                        reporteBase.IntTotalConveniosActivos,
+                        periodoComparacion.StrValor,
+                        reporteComparacion.IntTotalConveniosActivos)
                 };
 
             return ResponseFactory.Success(
                 comparativos,
-                "Comparativo de vinculación obtenido correctamente");
+                "Comparativo de Vinculación obtenido correctamente.");
         }
 
         /// <summary>
-        /// Construye el comparativo de convenios activos.
+        /// Calcula la diferencia, el cambio porcentual
+        /// y el estado de un indicador de vinculación.
         /// </summary>
-        private static ReporteVinculacionComparativoDto CrearComparativo(
-            string indicador,
-            string periodoActual,
-            int valorActual,
-            string? periodoAnterior,
-            int valorAnterior)
+        private static ReporteVinculacionComparativoDto
+            CrearComparativo(
+                string indicador,
+                string periodoBase,
+                int valorBase,
+                string periodoComparacion,
+                int valorComparacion)
         {
-            var diferencia = valorActual - valorAnterior;
+            var diferencia =
+                valorBase - valorComparacion;
 
-            var porcentaje = valorAnterior == 0
-                ? 0
-                : Math.Round(
-                    (decimal)diferencia /
-                    valorAnterior *
-                    100,
-                    2);
+            var porcentajeCambio =
+                valorComparacion == 0
+                    ? 0
+                    : Math.Round(
+                        (decimal)diferencia /
+                        valorComparacion *
+                        100,
+                        2);
 
             var estado = diferencia > 0
                 ? "Aumentó"
@@ -145,52 +196,13 @@ namespace Seph.Principal.Application.Features.ReporteVinculacion
 
             return new ReporteVinculacionComparativoDto(
                 indicador,
-                periodoActual,
-                valorActual,
-                periodoAnterior,
-                valorAnterior,
+                periodoBase,
+                valorBase,
+                periodoComparacion,
+                valorComparacion,
                 diferencia,
-                porcentaje,
+                porcentajeCambio,
                 estado);
-        }
-
-        /// <summary>
-        /// Construye el indicador cuando no existe
-        /// un reporte correspondiente al periodo anterior.
-        /// </summary>
-        private static IReadOnlyCollection<
-            ReporteVinculacionComparativoDto>
-            CrearComparativosSinPeriodoAnterior(
-                string periodoActual,
-                Domain.Entities.ReporteVinculacion reporteActual)
-        {
-            return new List<ReporteVinculacionComparativoDto>
-            {
-                CrearSinPeriodoAnterior(
-                    "Convenios activos",
-                    periodoActual,
-                    reporteActual.IntTotalConveniosActivos)
-            };
-        }
-
-        /// <summary>
-        /// Construye un indicador cuando no existe un periodo anterior.
-        /// </summary>
-        private static ReporteVinculacionComparativoDto
-            CrearSinPeriodoAnterior(
-                string indicador,
-                string periodoActual,
-                int valorActual)
-        {
-            return new ReporteVinculacionComparativoDto(
-                indicador,
-                periodoActual,
-                valorActual,
-                null,
-                null,
-                0,
-                0,
-                "Sin periodo anterior");
         }
     }
 }

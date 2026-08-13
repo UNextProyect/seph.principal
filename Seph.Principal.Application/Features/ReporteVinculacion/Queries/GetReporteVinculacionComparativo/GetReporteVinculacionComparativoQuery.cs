@@ -6,12 +6,14 @@ namespace Seph.Principal.Application.Features.ReporteVinculacion
     .Queries.GetReporteVinculacionComparativo
 {
     /// <summary>
-    /// Solicita el comparativo de convenios activos
-    /// entre el periodo actual y el periodo anterior.
+    /// Solicita la comparación de los indicadores
+    /// de vinculación entre dos periodos seleccionados.
     /// </summary>
     public sealed record GetReporteVinculacionComparativoQuery(
-        long IdMapInstitucionPeriodo)
+        long IdMapPeriodoBase,
+        long IdMapPeriodoComparacion)
         : IRequest<
             ResponseWrapper<
-                IReadOnlyCollection<ReporteVinculacionComparativoDto>>>;
+                IReadOnlyCollection<
+                    ReporteVinculacionComparativoDto>>>;
 }

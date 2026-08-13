@@ -11,90 +11,164 @@ using Seph.Principal.Domain.Repositories;
 
 namespace Seph.Principal.Application.Features.ReporteMatricula.Queries.GetReporteMatriculaComparativo
 {
+    /// <summary>
+    /// Compara la matrícula registrada
+    /// entre dos periodos seleccionados.
+    /// </summary>
     public sealed class GetReporteMatriculaComparativoQueryHandler(
-          IReporteMatriculaRepository reporteMatriculaRepository,
-          IMapInstitucionPeriodoRepository mapInstitucionPeriodoRepository,
-          ICatPeriodoRepository catPeriodoRepository)
-          : IRequestHandler<GetReporteMatriculaComparativoQuery, ResponseWrapper<ReporteMatriculaComparativoDto>>
+        IReporteMatriculaRepository reporteMatriculaRepository,
+        IMapInstitucionPeriodoRepository mapInstitucionPeriodoRepository,
+        ICatPeriodoRepository catPeriodoRepository)
+        : IRequestHandler<
+            GetReporteMatriculaComparativoQuery,
+            ResponseWrapper<ReporteMatriculaComparativoDto>>
     {
-        public async Task<ResponseWrapper<ReporteMatriculaComparativoDto>> Handle(
-            GetReporteMatriculaComparativoQuery request,
-            CancellationToken cancellationToken)
+        public async Task<
+            ResponseWrapper<ReporteMatriculaComparativoDto>>
+            Handle(
+                GetReporteMatriculaComparativoQuery request,
+                CancellationToken cancellationToken)
         {
-            // Obtiene el reporte actual.
-            var reporteActual = await reporteMatriculaRepository.GetByMapInstitucionPeriodoAsync(
-                request.IdMapInstitucionPeriodo,
-                cancellationToken);
-
-            if (reporteActual is null)
+            /*
+             * Evita comparar el mismo periodo
+             * en ambos selectores.
+             */
+            if (
+                request.IdMapPeriodoBase ==
+                request.IdMapPeriodoComparacion
+            )
             {
-                return ResponseFactory.Failure<ReporteMatriculaComparativoDto>(
-                    "No existe un reporte de matrícula para este periodo.",
-                    HttpStatusCode.NotFound);
+                return ResponseFactory
+                    .Failure<ReporteMatriculaComparativoDto>(
+                        "Los periodos seleccionados deben ser diferentes.",
+                        HttpStatusCode.BadRequest);
             }
 
-            // Obtiene la relación institución-periodo actual.
-            var mapActual = await mapInstitucionPeriodoRepository.GetByIdAsync(
-                request.IdMapInstitucionPeriodo,
-                cancellationToken);
+            /*
+             * Obtiene las relaciones institución-periodo
+             * correspondientes a la comparación.
+             */
+            var mapPeriodoBase =
+                await mapInstitucionPeriodoRepository
+                    .GetByIdAsync(
+                        request.IdMapPeriodoBase,
+                        cancellationToken);
 
-            if (mapActual is null)
+            if (mapPeriodoBase is null)
             {
-                return ResponseFactory.Failure<ReporteMatriculaComparativoDto>(
-                    "No existe la relación institución-periodo.",
-                    HttpStatusCode.NotFound);
+                return ResponseFactory
+                    .Failure<ReporteMatriculaComparativoDto>(
+                        "No existe el periodo base seleccionado.",
+                        HttpStatusCode.NotFound);
             }
 
-            // Obtiene los datos del periodo actual.
-            var periodoActual = await catPeriodoRepository.GetByIdAsync(
-                mapActual.IdPeriodo,
-                cancellationToken);
+            var mapPeriodoComparacion =
+                await mapInstitucionPeriodoRepository
+                    .GetByIdAsync(
+                        request.IdMapPeriodoComparacion,
+                        cancellationToken);
 
-            if (periodoActual is null)
+            if (mapPeriodoComparacion is null)
             {
-                return ResponseFactory.Failure<ReporteMatriculaComparativoDto>(
-                    "No existe el periodo actual.",
-                    HttpStatusCode.NotFound);
+                return ResponseFactory
+                    .Failure<ReporteMatriculaComparativoDto>(
+                        "No existe el periodo seleccionado para comparar.",
+                        HttpStatusCode.NotFound);
             }
 
-            // Busca el reporte anterior de la misma institución.
-            var reporteAnterior = await reporteMatriculaRepository.GetPreviousReporteAsync(
-                mapActual.IdInstitucion,
-                periodoActual.IntAnio,
-                periodoActual.IntNumeroPeriodo,
-                cancellationToken);
-
-            if (reporteAnterior is null)
+            /*
+             * Los dos periodos deben pertenecer
+             * a la misma institución.
+             */
+            if (
+                mapPeriodoBase.IdInstitucion !=
+                mapPeriodoComparacion.IdInstitucion
+            )
             {
-                var sinAnterior = new ReporteMatriculaComparativoDto(
-                    periodoActual.StrValor,
-                    reporteActual.IntTotal,
-                    null,
-                    null,
-                    0,
-                    0,
-                    "Sin periodo anterior");
-
-                return ResponseFactory.Success(
-                    sinAnterior,
-                    "No existe un periodo anterior para comparar.");
+                return ResponseFactory
+                    .Failure<ReporteMatriculaComparativoDto>(
+                        "Los periodos seleccionados no pertenecen a la misma institución.",
+                        HttpStatusCode.BadRequest);
             }
 
-            var mapAnterior = await mapInstitucionPeriodoRepository.GetByIdAsync(
-                reporteAnterior.IdMapInstitucionPeriodo,
-                cancellationToken);
+            /*
+             * Obtiene los reportes de matrícula
+             * correspondientes a ambos periodos.
+             */
+            var reporteBase =
+                await reporteMatriculaRepository
+                    .GetByMapInstitucionPeriodoAsync(
+                        request.IdMapPeriodoBase,
+                        cancellationToken);
 
-            var periodoAnterior = mapAnterior is null
-                ? null
-                : await catPeriodoRepository.GetByIdAsync(
-                    mapAnterior.IdPeriodo,
+            if (reporteBase is null)
+            {
+                return ResponseFactory
+                    .Failure<ReporteMatriculaComparativoDto>(
+                        "No existe un reporte de matrícula para el periodo base.",
+                        HttpStatusCode.NotFound);
+            }
+
+            var reporteComparacion =
+                await reporteMatriculaRepository
+                    .GetByMapInstitucionPeriodoAsync(
+                        request.IdMapPeriodoComparacion,
+                        cancellationToken);
+
+            if (reporteComparacion is null)
+            {
+                return ResponseFactory
+                    .Failure<ReporteMatriculaComparativoDto>(
+                        "No existe un reporte de matrícula para el periodo de comparación.",
+                        HttpStatusCode.NotFound);
+            }
+
+            /*
+             * Obtiene los nombres de los periodos
+             * que se mostrarán en el resultado.
+             */
+            var periodoBase =
+                await catPeriodoRepository.GetByIdAsync(
+                    mapPeriodoBase.IdPeriodo,
                     cancellationToken);
 
-            var diferencia = reporteActual.IntTotal - reporteAnterior.IntTotal;
+            if (periodoBase is null)
+            {
+                return ResponseFactory
+                    .Failure<ReporteMatriculaComparativoDto>(
+                        "No se encontró la información del periodo base.",
+                        HttpStatusCode.NotFound);
+            }
 
-            var porcentaje = reporteAnterior.IntTotal == 0
-                ? 0
-                : Math.Round((decimal)diferencia / reporteAnterior.IntTotal * 100, 2);
+            var periodoComparacion =
+                await catPeriodoRepository.GetByIdAsync(
+                    mapPeriodoComparacion.IdPeriodo,
+                    cancellationToken);
+
+            if (periodoComparacion is null)
+            {
+                return ResponseFactory
+                    .Failure<ReporteMatriculaComparativoDto>(
+                        "No se encontró la información del periodo de comparación.",
+                        HttpStatusCode.NotFound);
+            }
+
+            /*
+             * Calcula la diferencia tomando
+             * el periodo base como referencia.
+             */
+            var diferencia =
+                reporteBase.IntTotal -
+                reporteComparacion.IntTotal;
+
+            var porcentajeCambio =
+                reporteComparacion.IntTotal == 0
+                    ? 0
+                    : Math.Round(
+                        (decimal)diferencia /
+                        reporteComparacion.IntTotal *
+                        100,
+                        2);
 
             var estado = diferencia > 0
                 ? "Aumentó"
@@ -102,18 +176,19 @@ namespace Seph.Principal.Application.Features.ReporteMatricula.Queries.GetReport
                     ? "Disminuyó"
                     : "Sin cambios";
 
-            var dto = new ReporteMatriculaComparativoDto(
-                periodoActual.StrValor,
-                reporteActual.IntTotal,
-                periodoAnterior?.StrValor,
-                reporteAnterior.IntTotal,
-                diferencia,
-                porcentaje,
-                estado);
+            var comparativo =
+                new ReporteMatriculaComparativoDto(
+                    periodoBase.StrValor,
+                    reporteBase.IntTotal,
+                    periodoComparacion.StrValor,
+                    reporteComparacion.IntTotal,
+                    diferencia,
+                    porcentajeCambio,
+                    estado);
 
             return ResponseFactory.Success(
-                dto,
-                "Comparativo de matrícula obtenido correctamente");
+                comparativo,
+                "Comparativo de matrícula obtenido correctamente.");
         }
     }
 }

@@ -73,18 +73,21 @@ namespace Seph.Principal.Controllers
             return Ok(response);
         }
 
-        // Obtiene el comparativo del total de patentes
-        // contra el periodo anterior.
+        // Compara el total de patentes
+        // registrado en dos periodos seleccionados.
         [HttpGet(
-            "reporte-comparativo/{idMapInstitucionPeriodo:long}")]
+            "reporte-comparativo/{idMapPeriodoBase:long}/" +
+            "{idMapPeriodoComparacion:long}")]
         public async Task<IActionResult>
             GetReportePatenteComparativo(
-                long idMapInstitucionPeriodo,
+                long idMapPeriodoBase,
+                long idMapPeriodoComparacion,
                 CancellationToken cancellationToken)
         {
             var response = await mediator.Send(
                 new GetReportePatenteComparativoQuery(
-                    idMapInstitucionPeriodo),
+                    idMapPeriodoBase,
+                    idMapPeriodoComparacion),
                 cancellationToken);
 
             return Ok(response);

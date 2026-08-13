@@ -8,8 +8,8 @@ namespace Seph.Principal.Application.Features.ReporteInfraestructura
     .Queries.GetReporteInfraestructuraComparativo
 {
     /// <summary>
-    /// Obtiene el comparativo de cada indicador de infraestructura
-    /// entre el periodo actual y el periodo anterior.
+    /// Compara los indicadores de infraestructura
+    /// correspondientes a dos periodos seleccionados.
     /// </summary>
     public sealed class GetReporteInfraestructuraComparativoQueryHandler(
         IReporteInfraestructuraRepository reporteInfraestructuraRepository,
@@ -18,151 +18,203 @@ namespace Seph.Principal.Application.Features.ReporteInfraestructura
         : IRequestHandler<
             GetReporteInfraestructuraComparativoQuery,
             ResponseWrapper<
-                IReadOnlyCollection<ReporteInfraestructuraComparativoDto>>>
+                IReadOnlyCollection<
+                    ReporteInfraestructuraComparativoDto>>>
     {
         public async Task<
             ResponseWrapper<
-                IReadOnlyCollection<ReporteInfraestructuraComparativoDto>>>
-            Handle(
+                IReadOnlyCollection<
+                    ReporteInfraestructuraComparativoDto>>> Handle(
                 GetReporteInfraestructuraComparativoQuery request,
                 CancellationToken cancellationToken)
         {
-            // Obtiene el reporte de infraestructura del periodo actual.
-            var reporteActual = await reporteInfraestructuraRepository
-                .GetByMapInstitucionPeriodoAsync(
-                    request.IdMapInstitucionPeriodo,
-                    cancellationToken);
-
-            if (reporteActual is null)
+            /*
+             * Evita comparar dos veces la misma
+             * relación institución-periodo.
+             */
+            if (
+                request.IdMapPeriodoBase ==
+                request.IdMapPeriodoComparacion
+            )
             {
                 return ResponseFactory.Failure<
-                    IReadOnlyCollection<ReporteInfraestructuraComparativoDto>>(
-                    "No existe un reporte de infraestructura para este periodo.",
+                    IReadOnlyCollection<
+                        ReporteInfraestructuraComparativoDto>>(
+                    "Selecciona dos periodos diferentes.",
+                    HttpStatusCode.BadRequest);
+            }
+
+            /*
+             * Obtiene las dos relaciones
+             * institución-periodo seleccionadas.
+             */
+            var mapPeriodoBase =
+                await mapInstitucionPeriodoRepository.GetByIdAsync(
+                    request.IdMapPeriodoBase,
+                    cancellationToken);
+
+            var mapPeriodoComparacion =
+                await mapInstitucionPeriodoRepository.GetByIdAsync(
+                    request.IdMapPeriodoComparacion,
+                    cancellationToken);
+
+            if (
+                mapPeriodoBase is null ||
+                mapPeriodoComparacion is null
+            )
+            {
+                return ResponseFactory.Failure<
+                    IReadOnlyCollection<
+                        ReporteInfraestructuraComparativoDto>>(
+                    "No se encontró uno de los periodos seleccionados.",
                     HttpStatusCode.NotFound);
             }
 
-            // Obtiene la relación institución-periodo actual.
-            var mapActual = await mapInstitucionPeriodoRepository
-                .GetByIdAsync(
-                    request.IdMapInstitucionPeriodo,
-                    cancellationToken);
-
-            if (mapActual is null)
+            /*
+             * Solamente pueden compararse periodos
+             * correspondientes a la misma institución.
+             */
+            if (
+                mapPeriodoBase.IdInstitucion !=
+                mapPeriodoComparacion.IdInstitucion
+            )
             {
                 return ResponseFactory.Failure<
-                    IReadOnlyCollection<ReporteInfraestructuraComparativoDto>>(
-                    "No existe la relación institución-periodo.",
+                    IReadOnlyCollection<
+                        ReporteInfraestructuraComparativoDto>>(
+                    "Los periodos seleccionados no pertenecen " +
+                    "a la misma institución.",
+                    HttpStatusCode.BadRequest);
+            }
+
+            /*
+             * Obtiene los reportes de infraestructura
+             * de los dos periodos.
+             */
+            var reporteBase =
+                await reporteInfraestructuraRepository
+                    .GetByMapInstitucionPeriodoAsync(
+                        request.IdMapPeriodoBase,
+                        cancellationToken);
+
+            var reporteComparacion =
+                await reporteInfraestructuraRepository
+                    .GetByMapInstitucionPeriodoAsync(
+                        request.IdMapPeriodoComparacion,
+                        cancellationToken);
+
+            if (
+                reporteBase is null ||
+                reporteComparacion is null
+            )
+            {
+                return ResponseFactory.Failure<
+                    IReadOnlyCollection<
+                        ReporteInfraestructuraComparativoDto>>(
+                    "Uno de los periodos no tiene un reporte " +
+                    "de Infraestructura registrado.",
                     HttpStatusCode.NotFound);
             }
 
-            // Obtiene la información del periodo actual.
-            var periodoActual = await catPeriodoRepository.GetByIdAsync(
-                mapActual.IdPeriodo,
-                cancellationToken);
+            /*
+             * Obtiene los nombres de los periodos
+             * que se mostrarán en el frontend.
+             */
+            var periodoBase =
+                await catPeriodoRepository.GetByIdAsync(
+                    mapPeriodoBase.IdPeriodo,
+                    cancellationToken);
 
-            if (periodoActual is null)
+            var periodoComparacion =
+                await catPeriodoRepository.GetByIdAsync(
+                    mapPeriodoComparacion.IdPeriodo,
+                    cancellationToken);
+
+            if (
+                periodoBase is null ||
+                periodoComparacion is null
+            )
             {
                 return ResponseFactory.Failure<
-                    IReadOnlyCollection<ReporteInfraestructuraComparativoDto>>(
-                    "No existe el periodo actual.",
+                    IReadOnlyCollection<
+                        ReporteInfraestructuraComparativoDto>>(
+                    "No se encontró la información de uno " +
+                    "de los periodos seleccionados.",
                     HttpStatusCode.NotFound);
             }
 
-            // Busca el reporte anterior de la misma institución.
-            var reporteAnterior = await reporteInfraestructuraRepository
-                .GetPreviousReporteAsync(
-                    mapActual.IdInstitucion,
-                    periodoActual.IntAnio,
-                    periodoActual.IntNumeroPeriodo,
-                    cancellationToken);
-
-            if (reporteAnterior is null)
-            {
-                IReadOnlyCollection<ReporteInfraestructuraComparativoDto>
-                    comparativosSinAnterior =
-                    CrearComparativosSinPeriodoAnterior(
-                        periodoActual.StrValor,
-                        reporteActual);
-
-                return ResponseFactory.Success(
-                    comparativosSinAnterior,
-                    "No existe un periodo anterior para comparar.");
-            }
-
-            var mapAnterior = await mapInstitucionPeriodoRepository
-                .GetByIdAsync(
-                    reporteAnterior.IdMapInstitucionPeriodo,
-                    cancellationToken);
-
-            var periodoAnterior = mapAnterior is null
-                ? null
-                : await catPeriodoRepository.GetByIdAsync(
-                    mapAnterior.IdPeriodo,
-                    cancellationToken);
-
-            IReadOnlyCollection<ReporteInfraestructuraComparativoDto>
-                comparativos = new List<ReporteInfraestructuraComparativoDto>
+            /*
+             * Genera un comparativo independiente
+             * para cada indicador de infraestructura.
+             */
+            IReadOnlyCollection<
+                ReporteInfraestructuraComparativoDto> comparativos =
+                new List<ReporteInfraestructuraComparativoDto>
                 {
                     CrearComparativo(
                         "Aulas",
-                        periodoActual.StrValor,
-                        reporteActual.IntTotalAulas,
-                        periodoAnterior?.StrValor,
-                        reporteAnterior.IntTotalAulas),
+                        periodoBase.StrValor,
+                        reporteBase.IntTotalAulas,
+                        periodoComparacion.StrValor,
+                        reporteComparacion.IntTotalAulas),
 
                     CrearComparativo(
                         "Laboratorios",
-                        periodoActual.StrValor,
-                        reporteActual.IntTotalLaboratorios,
-                        periodoAnterior?.StrValor,
-                        reporteAnterior.IntTotalLaboratorios),
+                        periodoBase.StrValor,
+                        reporteBase.IntTotalLaboratorios,
+                        periodoComparacion.StrValor,
+                        reporteComparacion.IntTotalLaboratorios),
 
                     CrearComparativo(
                         "Talleres",
-                        periodoActual.StrValor,
-                        reporteActual.IntTotalTalleres,
-                        periodoAnterior?.StrValor,
-                        reporteAnterior.IntTotalTalleres),
+                        periodoBase.StrValor,
+                        reporteBase.IntTotalTalleres,
+                        periodoComparacion.StrValor,
+                        reporteComparacion.IntTotalTalleres),
 
                     CrearComparativo(
                         "Bibliotecas",
-                        periodoActual.StrValor,
-                        reporteActual.IntTotalBibliotecas,
-                        periodoAnterior?.StrValor,
-                        reporteAnterior.IntTotalBibliotecas),
+                        periodoBase.StrValor,
+                        reporteBase.IntTotalBibliotecas,
+                        periodoComparacion.StrValor,
+                        reporteComparacion.IntTotalBibliotecas),
 
                     CrearComparativo(
                         "Equipos de cómputo",
-                        periodoActual.StrValor,
-                        reporteActual.IntTotalComputo,
-                        periodoAnterior?.StrValor,
-                        reporteAnterior.IntTotalComputo)
+                        periodoBase.StrValor,
+                        reporteBase.IntTotalComputo,
+                        periodoComparacion.StrValor,
+                        reporteComparacion.IntTotalComputo)
                 };
 
             return ResponseFactory.Success(
                 comparativos,
-                "Comparativo de infraestructura obtenido correctamente");
+                "Comparativo de Infraestructura obtenido correctamente.");
         }
 
         /// <summary>
-        /// Construye el comparativo de un indicador de infraestructura.
+        /// Calcula la diferencia, el porcentaje
+        /// y el estado de un indicador.
         /// </summary>
-        private static ReporteInfraestructuraComparativoDto CrearComparativo(
-            string indicador,
-            string periodoActual,
-            int valorActual,
-            string? periodoAnterior,
-            int valorAnterior)
+        private static ReporteInfraestructuraComparativoDto
+            CrearComparativo(
+                string indicador,
+                string periodoBase,
+                int valorBase,
+                string periodoComparacion,
+                int valorComparacion)
         {
-            var diferencia = valorActual - valorAnterior;
+            var diferencia =
+                valorBase - valorComparacion;
 
-            var porcentaje = valorAnterior == 0
-                ? 0
-                : Math.Round(
-                    (decimal)diferencia /
-                    valorAnterior *
-                    100,
-                    2);
+            var porcentaje =
+                valorComparacion == 0
+                    ? 0
+                    : Math.Round(
+                        (decimal)diferencia /
+                        valorComparacion *
+                        100,
+                        2);
 
             var estado = diferencia > 0
                 ? "Aumentó"
@@ -172,72 +224,13 @@ namespace Seph.Principal.Application.Features.ReporteInfraestructura
 
             return new ReporteInfraestructuraComparativoDto(
                 indicador,
-                periodoActual,
-                valorActual,
-                periodoAnterior,
-                valorAnterior,
+                periodoBase,
+                valorBase,
+                periodoComparacion,
+                valorComparacion,
                 diferencia,
                 porcentaje,
                 estado);
-        }
-
-        /// <summary>
-        /// Construye los indicadores cuando no existe
-        /// un reporte correspondiente al periodo anterior.
-        /// </summary>
-        private static IReadOnlyCollection<
-            ReporteInfraestructuraComparativoDto>
-            CrearComparativosSinPeriodoAnterior(
-                string periodoActual,
-                Domain.Entities.ReporteInfraestructura reporteActual)
-        {
-            return new List<ReporteInfraestructuraComparativoDto>
-            {
-                CrearSinPeriodoAnterior(
-                    "Aulas",
-                    periodoActual,
-                    reporteActual.IntTotalAulas),
-
-                CrearSinPeriodoAnterior(
-                    "Laboratorios",
-                    periodoActual,
-                    reporteActual.IntTotalLaboratorios),
-
-                CrearSinPeriodoAnterior(
-                    "Talleres",
-                    periodoActual,
-                    reporteActual.IntTotalTalleres),
-
-                CrearSinPeriodoAnterior(
-                    "Bibliotecas",
-                    periodoActual,
-                    reporteActual.IntTotalBibliotecas),
-
-                CrearSinPeriodoAnterior(
-                    "Equipos de cómputo",
-                    periodoActual,
-                    reporteActual.IntTotalComputo)
-            };
-        }
-
-        /// <summary>
-        /// Construye un indicador cuando no existe un periodo anterior.
-        /// </summary>
-        private static ReporteInfraestructuraComparativoDto
-            CrearSinPeriodoAnterior(
-                string indicador,
-                string periodoActual,
-                int valorActual)
-        {
-            return new ReporteInfraestructuraComparativoDto(
-                indicador,
-                periodoActual,
-                valorActual,
-                null,
-                null,
-                0,
-                0,
-                "Sin periodo anterior");
         }
     }
 }

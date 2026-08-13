@@ -11,7 +11,11 @@ namespace Seph.Principal.Domain.Repositories
     {
         Task<IReadOnlyList<MapInstitucionPeriodo>> GetAllAsync(CancellationToken cancellationToken);
 
-        Task<MapInstitucionPeriodo?> GetByIdAsync(long id, CancellationToken cancellationToken);
+        Task<IReadOnlyList<MapInstitucionPeriodo>> GetByInstitucionAsync(
+        long idInstitucion,
+        CancellationToken cancellationToken);
+
+       Task<MapInstitucionPeriodo?> GetByIdAsync(long id, CancellationToken cancellationToken);
 
         Task<MapInstitucionPeriodo?> GetByInstitucionPeriodoAsync(
             long idInstitucion,

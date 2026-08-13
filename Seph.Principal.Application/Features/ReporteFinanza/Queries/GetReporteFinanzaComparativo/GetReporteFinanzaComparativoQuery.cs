@@ -6,11 +6,12 @@ namespace Seph.Principal.Application.Features.ReporteFinanza
     .Queries.GetReporteFinanzaComparativo
 {
     /// <summary>
-    /// Solicita el comparativo de los indicadores financieros
-    /// entre el periodo actual y el periodo anterior.
+    /// Solicita la comparación de los indicadores
+    /// financieros entre dos periodos seleccionados.
     /// </summary>
     public sealed record GetReporteFinanzaComparativoQuery(
-        long IdMapInstitucionPeriodo)
+        long IdMapPeriodoBase,
+        long IdMapPeriodoComparacion)
         : IRequest<
             ResponseWrapper<
                 IReadOnlyCollection<ReporteFinanzaComparativoDto>>>;

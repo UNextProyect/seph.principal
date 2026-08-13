@@ -8,8 +8,8 @@ namespace Seph.Principal.Application.Features.ReporteFinanza
     .Queries.GetReporteFinanzaComparativo
 {
     /// <summary>
-    /// Obtiene el comparativo de los indicadores financieros
-    /// entre el periodo actual y el periodo anterior.
+    /// Compara los indicadores financieros
+    /// correspondientes a dos periodos seleccionados.
     /// </summary>
     public sealed class GetReporteFinanzaComparativoQueryHandler(
         IReporteFinanzaRepository reporteFinanzaRepository,
@@ -18,172 +18,217 @@ namespace Seph.Principal.Application.Features.ReporteFinanza
         : IRequestHandler<
             GetReporteFinanzaComparativoQuery,
             ResponseWrapper<
-                IReadOnlyCollection<ReporteFinanzaComparativoDto>>>
+                IReadOnlyCollection<
+                    ReporteFinanzaComparativoDto>>>
     {
         public async Task<
             ResponseWrapper<
-                IReadOnlyCollection<ReporteFinanzaComparativoDto>>>
-            Handle(
+                IReadOnlyCollection<
+                    ReporteFinanzaComparativoDto>>> Handle(
                 GetReporteFinanzaComparativoQuery request,
                 CancellationToken cancellationToken)
         {
-            // Obtiene el reporte financiero del periodo actual.
-            var reporteActual =
-                await reporteFinanzaRepository
-                    .GetByMapInstitucionPeriodoAsync(
-                        request.IdMapInstitucionPeriodo,
-                        cancellationToken);
-
-            if (reporteActual is null)
+            /*
+             * Evita comparar dos veces la misma
+             * relación institución-periodo.
+             */
+            if (
+                request.IdMapPeriodoBase ==
+                request.IdMapPeriodoComparacion
+            )
             {
                 return ResponseFactory.Failure<
-                    IReadOnlyCollection<ReporteFinanzaComparativoDto>>(
-                    "No existe un reporte financiero para este periodo.",
-                    HttpStatusCode.NotFound);
+                    IReadOnlyCollection<
+                        ReporteFinanzaComparativoDto>>(
+                    "Selecciona dos periodos diferentes.",
+                    HttpStatusCode.BadRequest);
             }
 
-            // Obtiene la relación institución-periodo actual.
-            var mapActual =
-                await mapInstitucionPeriodoRepository
-                    .GetByIdAsync(
-                        request.IdMapInstitucionPeriodo,
-                        cancellationToken);
-
-            if (mapActual is null)
-            {
-                return ResponseFactory.Failure<
-                    IReadOnlyCollection<ReporteFinanzaComparativoDto>>(
-                    "No existe la relación institución-periodo.",
-                    HttpStatusCode.NotFound);
-            }
-
-            // Obtiene la información del periodo actual.
-            var periodoActual =
-                await catPeriodoRepository
-                    .GetByIdAsync(
-                        mapActual.IdPeriodo,
-                        cancellationToken);
-
-            if (periodoActual is null)
-            {
-                return ResponseFactory.Failure<
-                    IReadOnlyCollection<ReporteFinanzaComparativoDto>>(
-                    "No existe el periodo actual.",
-                    HttpStatusCode.NotFound);
-            }
-
-            // Busca el reporte anterior de la misma institución.
-            var reporteAnterior =
-                await reporteFinanzaRepository
-                    .GetPreviousReporteAsync(
-                        mapActual.IdInstitucion,
-                        periodoActual.IntAnio,
-                        periodoActual.IntNumeroPeriodo,
-                        cancellationToken);
-
-            if (reporteAnterior is null)
-            {
-                IReadOnlyCollection<ReporteFinanzaComparativoDto>
-                    comparativosSinAnterior =
-                    CrearComparativosSinPeriodoAnterior(
-                        periodoActual.StrValor,
-                        reporteActual);
-
-                return ResponseFactory.Success(
-                    comparativosSinAnterior,
-                    "No existe un periodo anterior para comparar.");
-            }
-
-            var mapAnterior =
-                await mapInstitucionPeriodoRepository
-                    .GetByIdAsync(
-                        reporteAnterior.IdMapInstitucionPeriodo,
-                        cancellationToken);
-
-            var periodoAnterior = mapAnterior is null
-                ? null
-                : await catPeriodoRepository.GetByIdAsync(
-                    mapAnterior.IdPeriodo,
+            /*
+             * Obtiene las relaciones institución-periodo
+             * seleccionadas para la comparación.
+             */
+            var mapPeriodoBase =
+                await mapInstitucionPeriodoRepository.GetByIdAsync(
+                    request.IdMapPeriodoBase,
                     cancellationToken);
 
-            IReadOnlyCollection<ReporteFinanzaComparativoDto>
-                comparativos =
-                    new List<ReporteFinanzaComparativoDto>
-                    {
-                        CrearComparativo(
-                            "Presupuesto anual",
-                            periodoActual.StrValor,
-                            reporteActual.MoneyPresupuestoAnual,
-                            periodoAnterior?.StrValor,
-                            reporteAnterior.MoneyPresupuestoAnual),
+            var mapPeriodoComparacion =
+                await mapInstitucionPeriodoRepository.GetByIdAsync(
+                    request.IdMapPeriodoComparacion,
+                    cancellationToken);
 
-                        CrearComparativo(
-                            "Subsidio estatal",
-                            periodoActual.StrValor,
-                            reporteActual.MoneySubsidioEstatal,
-                            periodoAnterior?.StrValor,
-                            reporteAnterior.MoneySubsidioEstatal),
+            if (
+                mapPeriodoBase is null ||
+                mapPeriodoComparacion is null
+            )
+            {
+                return ResponseFactory.Failure<
+                    IReadOnlyCollection<
+                        ReporteFinanzaComparativoDto>>(
+                    "No se encontró uno de los periodos seleccionados.",
+                    HttpStatusCode.NotFound);
+            }
 
-                        CrearComparativo(
-                            "Subsidio federal",
-                            periodoActual.StrValor,
-                            reporteActual.MoneySubsidioFederal,
-                            periodoAnterior?.StrValor,
-                            reporteAnterior.MoneySubsidioFederal),
+            /*
+             * Ambos periodos deben pertenecer
+             * a la misma institución.
+             */
+            if (
+                mapPeriodoBase.IdInstitucion !=
+                mapPeriodoComparacion.IdInstitucion
+            )
+            {
+                return ResponseFactory.Failure<
+                    IReadOnlyCollection<
+                        ReporteFinanzaComparativoDto>>(
+                    "Los periodos seleccionados no pertenecen " +
+                    "a la misma institución.",
+                    HttpStatusCode.BadRequest);
+            }
 
-                        CrearComparativo(
-                            "Ingresos propios",
-                            periodoActual.StrValor,
-                            reporteActual.MoneyIngresosPropios,
-                            periodoAnterior?.StrValor,
-                            reporteAnterior.MoneyIngresosPropios),
+            /*
+             * Obtiene los reportes financieros
+             * correspondientes a los dos periodos.
+             */
+            var reporteBase =
+                await reporteFinanzaRepository
+                    .GetByMapInstitucionPeriodoAsync(
+                        request.IdMapPeriodoBase,
+                        cancellationToken);
 
-                        CrearComparativo(
-                            "Gasto ejercido",
-                            periodoActual.StrValor,
-                            reporteActual.MoneyGastoEjercido,
-                            periodoAnterior?.StrValor,
-                            reporteAnterior.MoneyGastoEjercido),
+            var reporteComparacion =
+                await reporteFinanzaRepository
+                    .GetByMapInstitucionPeriodoAsync(
+                        request.IdMapPeriodoComparacion,
+                        cancellationToken);
 
-                        CrearComparativo(
-                            "Gasto por alumno",
-                            periodoActual.StrValor,
-                            reporteActual.MoneyGastoAlumno,
-                            periodoAnterior?.StrValor,
-                            reporteAnterior.MoneyGastoAlumno),
+            if (
+                reporteBase is null ||
+                reporteComparacion is null
+            )
+            {
+                return ResponseFactory.Failure<
+                    IReadOnlyCollection<
+                        ReporteFinanzaComparativoDto>>(
+                    "Uno de los periodos no tiene un reporte " +
+                    "de Finanzas registrado.",
+                    HttpStatusCode.NotFound);
+            }
 
-                        CrearComparativo(
-                            "Monto de adeudos",
-                            periodoActual.StrValor,
-                            reporteActual.MoneyMontoAdeudo,
-                            periodoAnterior?.StrValor,
-                            reporteAnterior.MoneyMontoAdeudo)
-                    };
+            /*
+             * Consulta los nombres de los periodos
+             * que se incluirán en cada indicador.
+             */
+            var periodoBase =
+                await catPeriodoRepository.GetByIdAsync(
+                    mapPeriodoBase.IdPeriodo,
+                    cancellationToken);
+
+            var periodoComparacion =
+                await catPeriodoRepository.GetByIdAsync(
+                    mapPeriodoComparacion.IdPeriodo,
+                    cancellationToken);
+
+            if (
+                periodoBase is null ||
+                periodoComparacion is null
+            )
+            {
+                return ResponseFactory.Failure<
+                    IReadOnlyCollection<
+                        ReporteFinanzaComparativoDto>>(
+                    "No se encontró la información de uno " +
+                    "de los periodos seleccionados.",
+                    HttpStatusCode.NotFound);
+            }
+
+            /*
+             * Genera un comparativo para cada
+             * indicador financiero registrado.
+             */
+            IReadOnlyCollection<
+                ReporteFinanzaComparativoDto> comparativos =
+                new List<ReporteFinanzaComparativoDto>
+                {
+                    CrearComparativo(
+                        "Presupuesto anual",
+                        periodoBase.StrValor,
+                        reporteBase.MoneyPresupuestoAnual,
+                        periodoComparacion.StrValor,
+                        reporteComparacion.MoneyPresupuestoAnual),
+
+                    CrearComparativo(
+                        "Subsidio estatal",
+                        periodoBase.StrValor,
+                        reporteBase.MoneySubsidioEstatal,
+                        periodoComparacion.StrValor,
+                        reporteComparacion.MoneySubsidioEstatal),
+
+                    CrearComparativo(
+                        "Subsidio federal",
+                        periodoBase.StrValor,
+                        reporteBase.MoneySubsidioFederal,
+                        periodoComparacion.StrValor,
+                        reporteComparacion.MoneySubsidioFederal),
+
+                    CrearComparativo(
+                        "Ingresos propios",
+                        periodoBase.StrValor,
+                        reporteBase.MoneyIngresosPropios,
+                        periodoComparacion.StrValor,
+                        reporteComparacion.MoneyIngresosPropios),
+
+                    CrearComparativo(
+                        "Gasto ejercido",
+                        periodoBase.StrValor,
+                        reporteBase.MoneyGastoEjercido,
+                        periodoComparacion.StrValor,
+                        reporteComparacion.MoneyGastoEjercido),
+
+                    CrearComparativo(
+                        "Gasto por alumno",
+                        periodoBase.StrValor,
+                        reporteBase.MoneyGastoAlumno,
+                        periodoComparacion.StrValor,
+                        reporteComparacion.MoneyGastoAlumno),
+
+                    CrearComparativo(
+                        "Monto de adeudos",
+                        periodoBase.StrValor,
+                        reporteBase.MoneyMontoAdeudo,
+                        periodoComparacion.StrValor,
+                        reporteComparacion.MoneyMontoAdeudo)
+                };
 
             return ResponseFactory.Success(
                 comparativos,
-                "Comparativo financiero obtenido correctamente");
+                "Comparativo de Finanzas obtenido correctamente.");
         }
 
         /// <summary>
-        /// Construye el comparativo de un indicador financiero.
+        /// Calcula la diferencia, el cambio porcentual
+        /// y el estado de un indicador financiero.
         /// </summary>
-        private static ReporteFinanzaComparativoDto CrearComparativo(
-            string indicador,
-            string periodoActual,
-            decimal valorActual,
-            string? periodoAnterior,
-            decimal valorAnterior)
+        private static ReporteFinanzaComparativoDto
+            CrearComparativo(
+                string indicador,
+                string periodoBase,
+                decimal valorBase,
+                string periodoComparacion,
+                decimal valorComparacion)
         {
-            var diferencia = valorActual - valorAnterior;
+            var diferencia =
+                valorBase - valorComparacion;
 
-            var porcentaje = valorAnterior == 0
-                ? 0
-                : Math.Round(
-                    diferencia /
-                    valorAnterior *
-                    100,
-                    2);
+            var porcentajeCambio =
+                valorComparacion == 0
+                    ? 0
+                    : Math.Round(
+                        diferencia /
+                        valorComparacion *
+                        100,
+                        2);
 
             var estado = diferencia > 0
                 ? "Aumentó"
@@ -193,82 +238,13 @@ namespace Seph.Principal.Application.Features.ReporteFinanza
 
             return new ReporteFinanzaComparativoDto(
                 indicador,
-                periodoActual,
-                valorActual,
-                periodoAnterior,
-                valorAnterior,
+                periodoBase,
+                valorBase,
+                periodoComparacion,
+                valorComparacion,
                 diferencia,
-                porcentaje,
+                porcentajeCambio,
                 estado);
-        }
-
-        /// <summary>
-        /// Construye los indicadores cuando no existe
-        /// un reporte correspondiente al periodo anterior.
-        /// </summary>
-        private static IReadOnlyCollection<
-            ReporteFinanzaComparativoDto>
-            CrearComparativosSinPeriodoAnterior(
-                string periodoActual,
-                Domain.Entities.ReporteFinanza reporteActual)
-        {
-            return new List<ReporteFinanzaComparativoDto>
-            {
-                CrearSinPeriodoAnterior(
-                    "Presupuesto anual",
-                    periodoActual,
-                    reporteActual.MoneyPresupuestoAnual),
-
-                CrearSinPeriodoAnterior(
-                    "Subsidio estatal",
-                    periodoActual,
-                    reporteActual.MoneySubsidioEstatal),
-
-                CrearSinPeriodoAnterior(
-                    "Subsidio federal",
-                    periodoActual,
-                    reporteActual.MoneySubsidioFederal),
-
-                CrearSinPeriodoAnterior(
-                    "Ingresos propios",
-                    periodoActual,
-                    reporteActual.MoneyIngresosPropios),
-
-                CrearSinPeriodoAnterior(
-                    "Gasto ejercido",
-                    periodoActual,
-                    reporteActual.MoneyGastoEjercido),
-
-                CrearSinPeriodoAnterior(
-                    "Gasto por alumno",
-                    periodoActual,
-                    reporteActual.MoneyGastoAlumno),
-
-                CrearSinPeriodoAnterior(
-                    "Monto de adeudos",
-                    periodoActual,
-                    reporteActual.MoneyMontoAdeudo)
-            };
-        }
-
-        /// <summary>
-        /// Construye un indicador cuando no existe un periodo anterior.
-        /// </summary>
-        private static ReporteFinanzaComparativoDto
-            CrearSinPeriodoAnterior(
-                string indicador,
-                string periodoActual,
-                decimal valorActual)
-        {
-            return new ReporteFinanzaComparativoDto(
-                indicador,
-                periodoActual,
-                valorActual,
-                null,
-                null,
-                0,
-                0,
-                "Sin periodo anterior");
         }
     }
 }
