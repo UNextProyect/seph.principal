@@ -52,7 +52,13 @@ namespace Seph.Principal.Application.Features.MapInstitucionPeriodo.Queries.GetP
                 mapInstitucionPeriodo.Id,
                 mapInstitucionPeriodo.IdInstitucion,
                 mapInstitucionPeriodo.IdPeriodo,
+
+                // Clave interna del periodo.
                 periodo.StrValor,
+
+                // Nombre descriptivo mostrado al usuario.
+                periodo.StrDescripcion,
+
                 mapInstitucionPeriodo.BitCapturaAbierta,
                 mapInstitucionPeriodo.DateFechaApertura,
                 mapInstitucionPeriodo.DateFechaCierre);
